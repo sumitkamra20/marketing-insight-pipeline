@@ -1,0 +1,9 @@
+{
+  "account": "your-account.snowflakecomputing.com",
+  "user": "dbt_marketing",
+  "password": "dbtPassword123",
+  "warehouse": "MARKETING_WH",
+  "database": "MARKETING_INSIGHTS_DB",
+  "schema": "RAW",
+  "role": "TRANSFORM"
+}

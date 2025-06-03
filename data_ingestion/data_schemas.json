@@ -1,0 +1,359 @@
+{
+  "../data/raw/CustomersData.csv": {
+    "file_name": "CustomersData.csv",
+    "total_rows": 1468,
+    "total_columns": 4,
+    "columns": {
+      "CustomerID": {
+        "data_type": "int64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 1468,
+        "sample_values": [
+          17850,
+          13047,
+          12583,
+          13748,
+          15100
+        ],
+        "suggested_snowflake_type": "NUMBER"
+      },
+      "Gender": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 2,
+        "sample_values": [
+          "M",
+          "M",
+          "M",
+          "F",
+          "M"
+        ],
+        "suggested_snowflake_type": "VARCHAR(1)"
+      },
+      "Location": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 5,
+        "sample_values": [
+          "Chicago",
+          "California",
+          "Chicago",
+          "California",
+          "California"
+        ],
+        "suggested_snowflake_type": "VARCHAR(13)"
+      },
+      "Tenure_Months": {
+        "data_type": "int64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 49,
+        "sample_values": [
+          12,
+          43,
+          33,
+          30,
+          49
+        ],
+        "suggested_snowflake_type": "NUMBER"
+      }
+    }
+  },
+  "../data/raw/Tax_amount.csv": {
+    "file_name": "Tax_amount.csv",
+    "total_rows": 20,
+    "total_columns": 2,
+    "columns": {
+      "Product_Category": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 20,
+        "sample_values": [
+          "Nest-USA",
+          "Office",
+          "Apparel",
+          "Bags",
+          "Drinkware"
+        ],
+        "suggested_snowflake_type": "VARCHAR(20)"
+      },
+      "GST": {
+        "data_type": "float64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 4,
+        "sample_values": [
+          0.1,
+          0.1,
+          0.18,
+          0.18,
+          0.18
+        ],
+        "suggested_snowflake_type": "FLOAT"
+      }
+    }
+  },
+  "../data/raw/Marketing_Spend.csv": {
+    "file_name": "Marketing_Spend.csv",
+    "total_rows": 365,
+    "total_columns": 3,
+    "columns": {
+      "Date": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 365,
+        "sample_values": [
+          "1/1/2019",
+          "1/2/2019",
+          "1/3/2019",
+          "1/4/2019",
+          "1/5/2019"
+        ],
+        "suggested_snowflake_type": "VARCHAR(10)"
+      },
+      "Offline_Spend": {
+        "data_type": "int64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 11,
+        "sample_values": [
+          4500,
+          4500,
+          4500,
+          4500,
+          4500
+        ],
+        "suggested_snowflake_type": "NUMBER"
+      },
+      "Online_Spend": {
+        "data_type": "float64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 365,
+        "sample_values": [
+          2424.5,
+          3480.36,
+          1576.38,
+          2928.55,
+          4055.3
+        ],
+        "suggested_snowflake_type": "FLOAT"
+      }
+    }
+  },
+  "../data/raw/Discount_Coupon.csv": {
+    "file_name": "Discount_Coupon.csv",
+    "total_rows": 204,
+    "total_columns": 4,
+    "columns": {
+      "Month": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 12,
+        "sample_values": [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Jan",
+          "Feb"
+        ],
+        "suggested_snowflake_type": "VARCHAR(3)"
+      },
+      "Product_Category": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 17,
+        "sample_values": [
+          "Apparel",
+          "Apparel",
+          "Apparel",
+          "Nest-USA",
+          "Nest-USA"
+        ],
+        "suggested_snowflake_type": "VARCHAR(20)"
+      },
+      "Coupon_Code": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 48,
+        "sample_values": [
+          "SALE10",
+          "SALE20",
+          "SALE30",
+          "ELEC10",
+          "ELEC20"
+        ],
+        "suggested_snowflake_type": "VARCHAR(7)"
+      },
+      "Discount_pct": {
+        "data_type": "int64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 3,
+        "sample_values": [
+          10,
+          20,
+          30,
+          10,
+          20
+        ],
+        "suggested_snowflake_type": "NUMBER"
+      }
+    }
+  },
+  "../data/raw/Online_Sales.csv": {
+    "file_name": "Online_Sales.csv",
+    "total_rows": 52924,
+    "total_columns": 10,
+    "columns": {
+      "CustomerID": {
+        "data_type": "int64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 1468,
+        "sample_values": [
+          17850,
+          17850,
+          17850,
+          17850,
+          17850
+        ],
+        "suggested_snowflake_type": "NUMBER"
+      },
+      "Transaction_ID": {
+        "data_type": "int64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 25061,
+        "sample_values": [
+          16679,
+          16680,
+          16681,
+          16682,
+          16682
+        ],
+        "suggested_snowflake_type": "NUMBER"
+      },
+      "Transaction_Date": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 365,
+        "sample_values": [
+          "1/1/2019",
+          "1/1/2019",
+          "1/1/2019",
+          "1/1/2019",
+          "1/1/2019"
+        ],
+        "suggested_snowflake_type": "VARCHAR(10)"
+      },
+      "Product_SKU": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 1145,
+        "sample_values": [
+          "GGOENEBJ079499",
+          "GGOENEBJ079499",
+          "GGOEGFKQ020399",
+          "GGOEGAAB010516",
+          "GGOEGBJL013999"
+        ],
+        "suggested_snowflake_type": "VARCHAR(14)"
+      },
+      "Product_Description": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 404,
+        "sample_values": [
+          "Nest Learning Thermostat 3rd Gen-USA - Stainless Steel",
+          "Nest Learning Thermostat 3rd Gen-USA - Stainless Steel",
+          "Google Laptop and Cell Phone Stickers",
+          "Google Men's 100% Cotton Short Sleeve Hero Tee Black",
+          "Google Canvas Tote Natural/Navy"
+        ],
+        "suggested_snowflake_type": "VARCHAR(59)"
+      },
+      "Product_Category": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 20,
+        "sample_values": [
+          "Nest-USA",
+          "Nest-USA",
+          "Office",
+          "Apparel",
+          "Bags"
+        ],
+        "suggested_snowflake_type": "VARCHAR(20)"
+      },
+      "Quantity": {
+        "data_type": "int64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 151,
+        "sample_values": [
+          1,
+          1,
+          1,
+          5,
+          1
+        ],
+        "suggested_snowflake_type": "NUMBER"
+      },
+      "Avg_Price": {
+        "data_type": "float64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 546,
+        "sample_values": [
+          153.71,
+          153.71,
+          2.05,
+          17.53,
+          16.5
+        ],
+        "suggested_snowflake_type": "FLOAT"
+      },
+      "Delivery_Charges": {
+        "data_type": "float64",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 267,
+        "sample_values": [
+          6.5,
+          6.5,
+          6.5,
+          6.5,
+          6.5
+        ],
+        "suggested_snowflake_type": "FLOAT"
+      },
+      "Coupon_Status": {
+        "data_type": "object",
+        "null_count": "0",
+        "null_percentage": 0.0,
+        "unique_values": 3,
+        "sample_values": [
+          "Used",
+          "Used",
+          "Used",
+          "Not Used",
+          "Used"
+        ],
+        "suggested_snowflake_type": "VARCHAR(8)"
+      }
+    }
+  }
+}

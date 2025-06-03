@@ -1,0 +1,336 @@
+{
+  "Marketing_Spend": {
+    "table_name": "MARKETING_SPEND",
+    "total_rows": 365,
+    "total_columns": 3,
+    "columns": {
+      "Date": {
+        "column_name": "DATE",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 365,
+        "sample_values": [
+          "1/1/2019",
+          "1/2/2019",
+          "1/3/2019"
+        ],
+        "snowflake_type": "VARCHAR(10)"
+      },
+      "Offline_Spend": {
+        "column_name": "OFFLINE_SPEND",
+        "pandas_dtype": "int64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 11,
+        "sample_values": [
+          4500,
+          4500,
+          4500
+        ],
+        "snowflake_type": "NUMBER"
+      },
+      "Online_Spend": {
+        "column_name": "ONLINE_SPEND",
+        "pandas_dtype": "float64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 365,
+        "sample_values": [
+          2424.5,
+          3480.36,
+          1576.38
+        ],
+        "snowflake_type": "FLOAT"
+      }
+    }
+  },
+  "CustomersData": {
+    "table_name": "CUSTOMERSDATA",
+    "total_rows": 1468,
+    "total_columns": 4,
+    "columns": {
+      "CustomerID": {
+        "column_name": "CUSTOMERID",
+        "pandas_dtype": "int64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 1468,
+        "sample_values": [
+          17850,
+          13047,
+          12583
+        ],
+        "snowflake_type": "NUMBER"
+      },
+      "Gender": {
+        "column_name": "GENDER",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 2,
+        "sample_values": [
+          "M",
+          "M",
+          "M"
+        ],
+        "snowflake_type": "VARCHAR(1)"
+      },
+      "Location": {
+        "column_name": "LOCATION",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 5,
+        "sample_values": [
+          "Chicago",
+          "California",
+          "Chicago"
+        ],
+        "snowflake_type": "VARCHAR(13)"
+      },
+      "Tenure_Months": {
+        "column_name": "TENURE_MONTHS",
+        "pandas_dtype": "int64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 49,
+        "sample_values": [
+          12,
+          43,
+          33
+        ],
+        "snowflake_type": "NUMBER"
+      }
+    }
+  },
+  "Discount_Coupon": {
+    "table_name": "DISCOUNT_COUPON",
+    "total_rows": 204,
+    "total_columns": 4,
+    "columns": {
+      "Month": {
+        "column_name": "MONTH",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 12,
+        "sample_values": [
+          "Jan",
+          "Feb",
+          "Mar"
+        ],
+        "snowflake_type": "VARCHAR(3)"
+      },
+      "Product_Category": {
+        "column_name": "PRODUCT_CATEGORY",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 17,
+        "sample_values": [
+          "Apparel",
+          "Apparel",
+          "Apparel"
+        ],
+        "snowflake_type": "VARCHAR(20)"
+      },
+      "Coupon_Code": {
+        "column_name": "COUPON_CODE",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 48,
+        "sample_values": [
+          "SALE10",
+          "SALE20",
+          "SALE30"
+        ],
+        "snowflake_type": "VARCHAR(7)"
+      },
+      "Discount_pct": {
+        "column_name": "DISCOUNT_PCT",
+        "pandas_dtype": "int64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 3,
+        "sample_values": [
+          10,
+          20,
+          30
+        ],
+        "snowflake_type": "NUMBER"
+      }
+    }
+  },
+  "Tax_amount": {
+    "table_name": "TAX_AMOUNT",
+    "total_rows": 20,
+    "total_columns": 2,
+    "columns": {
+      "Product_Category": {
+        "column_name": "PRODUCT_CATEGORY",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 20,
+        "sample_values": [
+          "Nest-USA",
+          "Office",
+          "Apparel"
+        ],
+        "snowflake_type": "VARCHAR(20)"
+      },
+      "GST": {
+        "column_name": "GST",
+        "pandas_dtype": "float64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 4,
+        "sample_values": [
+          0.1,
+          0.1,
+          0.18
+        ],
+        "snowflake_type": "FLOAT"
+      }
+    }
+  },
+  "Online_Sales": {
+    "table_name": "ONLINE_SALES",
+    "total_rows": 52924,
+    "total_columns": 10,
+    "columns": {
+      "CustomerID": {
+        "column_name": "CUSTOMERID",
+        "pandas_dtype": "int64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 1468,
+        "sample_values": [
+          17850,
+          17850,
+          17850
+        ],
+        "snowflake_type": "NUMBER"
+      },
+      "Transaction_ID": {
+        "column_name": "TRANSACTION_ID",
+        "pandas_dtype": "int64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 25061,
+        "sample_values": [
+          16679,
+          16680,
+          16681
+        ],
+        "snowflake_type": "NUMBER"
+      },
+      "Transaction_Date": {
+        "column_name": "TRANSACTION_DATE",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 365,
+        "sample_values": [
+          "1/1/2019",
+          "1/1/2019",
+          "1/1/2019"
+        ],
+        "snowflake_type": "VARCHAR(10)"
+      },
+      "Product_SKU": {
+        "column_name": "PRODUCT_SKU",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 1145,
+        "sample_values": [
+          "GGOENEBJ079499",
+          "GGOENEBJ079499",
+          "GGOEGFKQ020399"
+        ],
+        "snowflake_type": "VARCHAR(14)"
+      },
+      "Product_Description": {
+        "column_name": "PRODUCT_DESCRIPTION",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 404,
+        "sample_values": [
+          "Nest Learning Thermostat 3rd Gen-USA - Stainless Steel",
+          "Nest Learning Thermostat 3rd Gen-USA - Stainless Steel",
+          "Google Laptop and Cell Phone Stickers"
+        ],
+        "snowflake_type": "VARCHAR(59)"
+      },
+      "Product_Category": {
+        "column_name": "PRODUCT_CATEGORY",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 20,
+        "sample_values": [
+          "Nest-USA",
+          "Nest-USA",
+          "Office"
+        ],
+        "snowflake_type": "VARCHAR(20)"
+      },
+      "Quantity": {
+        "column_name": "QUANTITY",
+        "pandas_dtype": "int64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 151,
+        "sample_values": [
+          1,
+          1,
+          1
+        ],
+        "snowflake_type": "NUMBER"
+      },
+      "Avg_Price": {
+        "column_name": "AVG_PRICE",
+        "pandas_dtype": "float64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 546,
+        "sample_values": [
+          153.71,
+          153.71,
+          2.05
+        ],
+        "snowflake_type": "FLOAT"
+      },
+      "Delivery_Charges": {
+        "column_name": "DELIVERY_CHARGES",
+        "pandas_dtype": "float64",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 267,
+        "sample_values": [
+          6.5,
+          6.5,
+          6.5
+        ],
+        "snowflake_type": "FLOAT"
+      },
+      "Coupon_Status": {
+        "column_name": "COUPON_STATUS",
+        "pandas_dtype": "object",
+        "null_count": 0,
+        "null_percentage": 0.0,
+        "unique_values": 3,
+        "sample_values": [
+          "Used",
+          "Used",
+          "Used"
+        ],
+        "snowflake_type": "VARCHAR(8)"
+      }
+    }
+  }
+}

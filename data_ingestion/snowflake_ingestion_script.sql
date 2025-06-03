@@ -1,0 +1,223 @@
+-- Snowflake Data Ingestion Script for Marketing Insight Pipeline
+-- This script creates the necessary objects and loads data from CSV files
+-- Updated for MARKETING_INSIGHTS_DB setup
+
+-- Use the TRANSFORM role and marketing database/schema
+USE ROLE TRANSFORM;
+USE WAREHOUSE MARKETING_WH;
+USE DATABASE MARKETING_INSIGHTS_DB;
+USE SCHEMA RAW;
+
+-- Create file format for CSV parsing
+CREATE OR REPLACE FILE FORMAT csv_format
+  TYPE = 'CSV'
+  FIELD_DELIMITER = ','
+  RECORD_DELIMITER = '\n'
+  SKIP_HEADER = 1
+  FIELD_OPTIONALLY_ENCLOSED_BY = '"'
+  TRIM_SPACE = TRUE
+  ERROR_ON_COLUMN_COUNT_MISMATCH = FALSE
+  ESCAPE = 'NONE'
+  ESCAPE_UNENCLOSED_FIELD = '\134'
+  DATE_FORMAT = 'AUTO'
+  TIMESTAMP_FORMAT = 'AUTO';
+
+-- Create tables with DDL from schema analysis
+
+-- 1. Customers table (renamed from CustomersData)
+CREATE OR REPLACE TABLE MARKETING_INSIGHTS_DB.RAW.CUSTOMERS (
+    CUSTOMERID NUMBER NOT NULL,
+    GENDER VARCHAR(1) NOT NULL,
+    LOCATION VARCHAR(13) NOT NULL,
+    TENURE_MONTHS NUMBER NOT NULL
+);
+
+-- 2. Tax_amount table
+CREATE OR REPLACE TABLE MARKETING_INSIGHTS_DB.RAW.TAX_AMOUNT (
+    PRODUCT_CATEGORY VARCHAR(20) NOT NULL,
+    GST FLOAT NOT NULL
+);
+
+-- 3. Marketing_Spend table
+CREATE OR REPLACE TABLE MARKETING_INSIGHTS_DB.RAW.MARKETING_SPEND (
+    DATE VARCHAR(10) NOT NULL,
+    OFFLINE_SPEND NUMBER NOT NULL,
+    ONLINE_SPEND FLOAT NOT NULL
+);
+
+-- 4. Discount_Coupon table
+CREATE OR REPLACE TABLE MARKETING_INSIGHTS_DB.RAW.DISCOUNT_COUPON (
+    MONTH VARCHAR(3) NOT NULL,
+    PRODUCT_CATEGORY VARCHAR(20) NOT NULL,
+    COUPON_CODE VARCHAR(7) NOT NULL,
+    DISCOUNT_PCT NUMBER NOT NULL
+);
+
+-- 5. Online_Sales table
+CREATE OR REPLACE TABLE MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES (
+    CUSTOMERID NUMBER NOT NULL,
+    TRANSACTION_ID NUMBER NOT NULL,
+    TRANSACTION_DATE VARCHAR(10) NOT NULL,
+    PRODUCT_SKU VARCHAR(14) NOT NULL,
+    PRODUCT_DESCRIPTION VARCHAR(59) NOT NULL,
+    PRODUCT_CATEGORY VARCHAR(20) NOT NULL,
+    QUANTITY NUMBER NOT NULL,
+    AVG_PRICE FLOAT NOT NULL,
+    DELIVERY_CHARGES FLOAT NOT NULL,
+    COUPON_STATUS VARCHAR(8) NOT NULL
+);
+
+-- Create internal stage for file uploads
+CREATE OR REPLACE STAGE MARKETING_INSIGHTS_DB.RAW.csv_stage;
+
+-- Alternative: External stage (S3 example - uncomment and adjust if needed)
+-- CREATE OR REPLACE STAGE MARKETING_INSIGHTS_DB.RAW.csv_stage_s3
+--   URL = 's3://your-marketing-bucket/csv-files/'
+--   CREDENTIALS = (AWS_KEY_ID = 'your-key-id' AWS_SECRET_KEY = 'your-secret-key');
+
+-- Load data using COPY INTO commands
+-- Note: You'll need to upload the CSV files to your stage first using:
+-- PUT file://path/to/CustomersData.csv @csv_stage/;
+-- PUT file://path/to/Tax_amount.csv @csv_stage/;
+-- PUT file://path/to/Marketing_Spend.csv @csv_stage/;
+-- PUT file://path/to/Discount_Coupon.csv @csv_stage/;
+-- PUT file://path/to/Online_Sales.csv @csv_stage/;
+
+-- Load Customers (from CustomersData.csv)
+COPY INTO MARKETING_INSIGHTS_DB.RAW.CUSTOMERS
+FROM @MARKETING_INSIGHTS_DB.RAW.csv_stage/CustomersData.csv
+FILE_FORMAT = (FORMAT_NAME = csv_format)
+ON_ERROR = 'ABORT_STATEMENT';
+
+-- Load Tax_amount
+COPY INTO MARKETING_INSIGHTS_DB.RAW.TAX_AMOUNT
+FROM @MARKETING_INSIGHTS_DB.RAW.csv_stage/Tax_amount.csv
+FILE_FORMAT = (FORMAT_NAME = csv_format)
+ON_ERROR = 'ABORT_STATEMENT';
+
+-- Load Marketing_Spend
+COPY INTO MARKETING_INSIGHTS_DB.RAW.MARKETING_SPEND
+FROM @MARKETING_INSIGHTS_DB.RAW.csv_stage/Marketing_Spend.csv
+FILE_FORMAT = (FORMAT_NAME = csv_format)
+ON_ERROR = 'ABORT_STATEMENT';
+
+-- Load Discount_Coupon
+COPY INTO MARKETING_INSIGHTS_DB.RAW.DISCOUNT_COUPON
+FROM @MARKETING_INSIGHTS_DB.RAW.csv_stage/Discount_Coupon.csv
+FILE_FORMAT = (FORMAT_NAME = csv_format)
+ON_ERROR = 'ABORT_STATEMENT';
+
+-- Load Online_Sales
+COPY INTO MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES
+FROM @MARKETING_INSIGHTS_DB.RAW.csv_stage/Online_Sales.csv
+FILE_FORMAT = (FORMAT_NAME = csv_format)
+ON_ERROR = 'ABORT_STATEMENT';
+
+-- Verify data loads
+SELECT 'CUSTOMERS' as table_name, COUNT(*) as row_count
+FROM MARKETING_INSIGHTS_DB.RAW.CUSTOMERS
+UNION ALL
+SELECT 'TAX_AMOUNT' as table_name, COUNT(*) as row_count
+FROM MARKETING_INSIGHTS_DB.RAW.TAX_AMOUNT
+UNION ALL
+SELECT 'MARKETING_SPEND' as table_name, COUNT(*) as row_count
+FROM MARKETING_INSIGHTS_DB.RAW.MARKETING_SPEND
+UNION ALL
+SELECT 'DISCOUNT_COUPON' as table_name, COUNT(*) as row_count
+FROM MARKETING_INSIGHTS_DB.RAW.DISCOUNT_COUPON
+UNION ALL
+SELECT 'ONLINE_SALES' as table_name, COUNT(*) as row_count
+FROM MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES
+ORDER BY row_count DESC;
+
+-- Optional: Create primary keys and foreign keys for data integrity
+-- (Uncomment and adjust as needed based on your business requirements)
+
+-- ALTER TABLE MARKETING_INSIGHTS_DB.RAW.CUSTOMERS ADD PRIMARY KEY (CUSTOMERID);
+-- ALTER TABLE MARKETING_INSIGHTS_DB.RAW.TAX_AMOUNT ADD PRIMARY KEY (PRODUCT_CATEGORY);
+-- ALTER TABLE MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES ADD FOREIGN KEY (CUSTOMERID)
+--   REFERENCES MARKETING_INSIGHTS_DB.RAW.CUSTOMERS(CUSTOMERID);
+
+-- Sample data validation queries
+SELECT 'Data validation queries completed' as info;
+
+-- Check for duplicate customers
+SELECT CUSTOMERID, COUNT(*) as duplicate_count
+FROM MARKETING_INSIGHTS_DB.RAW.CUSTOMERS
+GROUP BY CUSTOMERID
+HAVING COUNT(*) > 1;
+
+-- Check transaction date ranges
+SELECT
+    MIN(TRANSACTION_DATE) as min_date,
+    MAX(TRANSACTION_DATE) as max_date,
+    COUNT(DISTINCT TRANSACTION_DATE) as unique_dates
+FROM MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES;
+
+-- Check product categories consistency between tables
+SELECT DISTINCT os.PRODUCT_CATEGORY as missing_in_tax_table
+FROM MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES os
+WHERE os.PRODUCT_CATEGORY NOT IN (
+    SELECT PRODUCT_CATEGORY FROM MARKETING_INSIGHTS_DB.RAW.TAX_AMOUNT
+);
+
+-- Revenue summary by product category
+SELECT
+    PRODUCT_CATEGORY,
+    SUM(QUANTITY * AVG_PRICE) as total_revenue,
+    COUNT(DISTINCT TRANSACTION_ID) as total_transactions,
+    COUNT(DISTINCT CUSTOMERID) as unique_customers,
+    AVG(AVG_PRICE) as avg_price_per_item,
+    SUM(QUANTITY) as total_quantity_sold
+FROM MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES
+GROUP BY PRODUCT_CATEGORY
+ORDER BY total_revenue DESC;
+
+-- Customer analysis
+SELECT
+    c.LOCATION,
+    COUNT(DISTINCT c.CUSTOMERID) as customer_count,
+    AVG(c.TENURE_MONTHS) as avg_tenure_months,
+    SUM(COALESCE(s.total_spent, 0)) as total_revenue_by_location
+FROM MARKETING_INSIGHTS_DB.RAW.CUSTOMERS c
+LEFT JOIN (
+    SELECT
+        CUSTOMERID,
+        SUM(QUANTITY * AVG_PRICE) as total_spent
+    FROM MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES
+    GROUP BY CUSTOMERID
+) s ON c.CUSTOMERID = s.CUSTOMERID
+GROUP BY c.LOCATION
+ORDER BY total_revenue_by_location DESC;
+
+-- Marketing spend vs revenue correlation (daily)
+SELECT
+    ms.DATE,
+    ms.OFFLINE_SPEND,
+    ms.ONLINE_SPEND,
+    (ms.OFFLINE_SPEND + ms.ONLINE_SPEND) as total_marketing_spend,
+    COALESCE(SUM(os.QUANTITY * os.AVG_PRICE), 0) as daily_revenue
+FROM MARKETING_INSIGHTS_DB.RAW.MARKETING_SPEND ms
+LEFT JOIN MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES os
+    ON ms.DATE = os.TRANSACTION_DATE
+GROUP BY ms.DATE, ms.OFFLINE_SPEND, ms.ONLINE_SPEND
+ORDER BY ms.DATE;
+
+-- Summary statistics
+SELECT 'INGESTION SUMMARY' as metric, '' as value
+UNION ALL
+SELECT 'Total Customers', COUNT(*)::VARCHAR FROM MARKETING_INSIGHTS_DB.RAW.CUSTOMERS
+UNION ALL
+SELECT 'Total Transactions', COUNT(*)::VARCHAR FROM MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES
+UNION ALL
+SELECT 'Date Range', MIN(TRANSACTION_DATE) || ' to ' || MAX(TRANSACTION_DATE)
+    FROM MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES
+UNION ALL
+SELECT 'Total Revenue', '$' || ROUND(SUM(QUANTITY * AVG_PRICE), 2)::VARCHAR
+    FROM MARKETING_INSIGHTS_DB.RAW.ONLINE_SALES
+UNION ALL
+SELECT 'Product Categories', COUNT(DISTINCT PRODUCT_CATEGORY)::VARCHAR
+    FROM MARKETING_INSIGHTS_DB.RAW.TAX_AMOUNT
+UNION ALL
+SELECT 'Avg Marketing Spend/Day', '$' || ROUND(AVG(OFFLINE_SPEND + ONLINE_SPEND), 2)::VARCHAR
+    FROM MARKETING_INSIGHTS_DB.RAW.MARKETING_SPEND;
