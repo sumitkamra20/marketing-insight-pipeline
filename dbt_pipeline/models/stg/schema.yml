@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: "Staging table for customer data with enhanced customer segments"
+    columns:
+      - name: customerid
+        description: "Unique customer identifier"
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_online_sales
+    description: "Staging table for online sales transactions with proper date formatting"
+    columns:
+      - name: customer_id
+        description: "Foreign key to customers"
+        tests:
+          - not_null
+      - name: transaction_date
+        description: "Date of transaction (converted from text to date)"
+        tests:
+          - not_null
+      - name: quantity
+        description: "Quantity of items purchased"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+
+  - name: stg_marketing_spend
+    description: "Staging table for daily marketing spend data"
+    columns:
+      - name: spend_date
+        description: "Date of marketing spend (converted from text to date)"
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_tax_amount
+    description: "Staging table for GST tax rates by product category"
+    columns:
+      - name: product_category
+        description: "Product category"
+        tests:
+          - unique
+          - not_null

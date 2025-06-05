@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: "Customer dimension table with customer segments and enhanced attributes"
+    columns:
+      - name: customer_id
+        description: "Unique customer identifier (primary key)"
+        tests:
+          - unique
+          - not_null
+      - name: customer_segment
+        description: "Customer segment based on tenure (New, Developing, Established, Loyal)"
+        tests:
+          - accepted_values:
+              values: ['New Customer', 'Developing Customer', 'Established Customer', 'Loyal Customer']
+
+  - name: dim_products
+    description: "Product dimension table with product groups and tax information"
+    columns:
+      - name: product_sku
+        description: "Product SKU identifier (primary key)"
+        tests:
+          - unique
+          - not_null
+      - name: product_group
+        description: "High-level product grouping for analysis"
+        tests:
+          - accepted_values:
+              values: ['Technology', 'Fashion & Apparel', 'Bags & Storage', 'Lifestyle & Home', 'Office & Stationery', 'Gifts & Entertainment', 'Other']
+
+  - name: fct_sales
+    description: "Sales fact table with calculated financial metrics"
+    columns:
+      - name: customer_id
+        description: "Foreign key to dim_customer"
+        tests:
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_id
+      - name: product_sku
+        description: "Foreign key to dim_products"
+        tests:
+          - relationships:
+              to: ref('dim_products')
+              field: product_sku
+      - name: total_amount
+        description: "Final transaction amount"
+        tests:
+          - valid_transaction_amount:
+              min_amount: 0
+              max_amount: 15000
+              config:
+                severity: warn
+
+  - name: dim_datetime
+    description: "Date dimension table for time-series analysis"
+    columns:
+      - name: date_day
+        description: "Date (primary key)"
+        tests:
+          - unique
+          - not_null

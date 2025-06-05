@@ -1,0 +1,69 @@
+name: dbt CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'dbt_pipeline/**'
+  push:
+    branches: [ main ]
+    paths:
+      - 'dbt_pipeline/**'
+
+jobs:
+  dbt-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        pip install dbt-snowflake
+
+    - name: Install dbt packages
+      run: |
+        cd dbt_pipeline
+        dbt deps
+
+    - name: Run dbt parse (syntax check)
+      run: |
+        cd dbt_pipeline
+        dbt parse
+      env:
+        DBT_PROFILES_DIR: .
+
+    - name: Run dbt compile
+      run: |
+        cd dbt_pipeline
+        dbt compile
+      env:
+        DBT_PROFILES_DIR: .
+
+    - name: SQL Lint Check (basic)
+      run: |
+        cd dbt_pipeline
+        # Basic SQL formatting check
+        find models -name "*.sql" -exec grep -l "select\*" {} \; | wc -l | awk '{if($1>0){exit 1}}'
+        echo "SQL lint check passed"
+
+    - name: Check model documentation
+      run: |
+        cd dbt_pipeline
+        # Check if schema.yml files exist
+        find models -name "schema.yml" | wc -l | awk '{if($1<2){echo "Missing documentation"; exit 1}}'
+        echo "Documentation check passed"
+
+  notify-success:
+    runs-on: ubuntu-latest
+    needs: dbt-test
+    if: success()
+    steps:
+    - name: Success notification
+      run: echo "✅ All dbt checks passed successfully!"

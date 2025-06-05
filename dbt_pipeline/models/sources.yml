@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: raw
+    database: MARKETING_INSIGHTS_DB
+    schema: RAW
+    tables:
+      - name: customers
+      - name: discount_coupon
+      - name: marketing_spend
+      - name: online_sales
+      - name: tax_amount
