@@ -10,3 +10,48 @@ sources:
       - name: marketing_spend
       - name: online_sales
       - name: tax_amount
+
+  # Streaming data sources
+  - name: streaming
+    database: MARKETING_INSIGHTS_DB
+    schema: STREAMING
+    tables:
+      - name: bitcoin_prices_raw
+        description: "Real-time Bitcoin price data from Kafka stream"
+        columns:
+          - name: id
+            description: "Unique identifier for each price record"
+          - name: source
+            description: "Data source (coingecko)"
+          - name: price
+            description: "Current Bitcoin price in USD"
+          - name: change_24h
+            description: "24-hour percentage change"
+          - name: event_timestamp
+            description: "Timestamp when price was recorded"
+
+      - name: news_events_raw
+        description: "Real-time news events data from Kafka stream"
+        columns:
+          - name: id
+            description: "Unique identifier for each news record"
+          - name: source
+            description: "Data source (newsapi)"
+          - name: headline
+            description: "News article headline"
+          - name: description
+            description: "News article description"
+          - name: category
+            description: "News category"
+          - name: source_name
+            description: "News source name"
+          - name: url
+            description: "Article URL"
+          - name: published_at
+            description: "Article publication timestamp"
+          - name: word_count
+            description: "Word count of headline"
+          - name: has_crypto_mention
+            description: "Boolean flag for crypto-related content"
+          - name: event_timestamp
+            description: "Timestamp when news was processed"

@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  - name: stg_bitcoin
+    description: "Cleaned and enriched Bitcoin price data from streaming ingestion"
+    columns:
+      - name: id
+        description: "Unique identifier for each price record"
+        tests:
+          - unique
+          - not_null
+      - name: price
+        description: "Bitcoin price in USD"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: change_24h
+        description: "24-hour percentage change"
+        tests:
+          - not_null
+      - name: volatility_category
+        description: "Categorized volatility level based on 24h change"
+        tests:
+          - accepted_values:
+              values: ['LOW_VOLATILITY', 'MEDIUM_VOLATILITY', 'HIGH_VOLATILITY']
+      - name: event_timestamp
+        description: "Timestamp when price was recorded"
+        tests:
+          - not_null
+      - name: is_valid_record
+        description: "Data quality flag"
+        tests:
+          - not_null
+
+  - name: stg_news
+    description: "Cleaned and enriched news data from streaming ingestion"
+    columns:
+      - name: id
+        description: "Unique identifier for each news record"
+        tests:
+          - unique
+          - not_null
+      - name: headline
+        description: "News article headline"
+        tests:
+          - not_null
+      - name: has_crypto_mention
+        description: "Boolean flag for crypto-related content"
+        tests:
+          - not_null
+      - name: explicit_crypto_mention
+        description: "Enhanced crypto detection based on content analysis"
+        tests:
+          - not_null
+      - name: source_category
+        description: "Categorized news source type"
+        tests:
+          - accepted_values:
+              values: ['BROADCAST', 'WIRE_SERVICE', 'OTHER']
+      - name: headline_length_category
+        description: "Categorized headline complexity"
+        tests:
+          - accepted_values:
+              values: ['BRIEF', 'MODERATE', 'DETAILED']
+      - name: event_timestamp
+        description: "Timestamp when news was processed"
+        tests:
+          - not_null
+      - name: is_valid_record
+        description: "Data quality flag"
+        tests:
+          - not_null
