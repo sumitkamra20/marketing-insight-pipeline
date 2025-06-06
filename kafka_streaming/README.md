@@ -53,20 +53,7 @@ pip install -r requirements.txt
 api_key = "YOUR_NEWS_API_KEY"  # Get free at newsapi.org
 ```
 
-### 4. Configure Snowflake
-
-**Update `consumer_snowflake.py`:**
-```python
-self.snowflake_config = {
-    'user': 'your_username',
-    'password': 'your_password',
-    'account': 'your_account',
-    'warehouse': 'COMPUTE_WH',
-    'database': 'MARKETING_INSIGHTS_DB'
-}
-```
-
-### 5. Run the Pipeline
+### 4. Run the Pipeline
 
 #### **Option A: Test with Console First (Recommended)**
 
@@ -124,7 +111,7 @@ python producer_simple.py
 
 - **Bitcoin API (CoinGecko)**: Unlimited, fetched every 30 seconds
 - **News API**: 1,000 requests/day free tier, fetched every 90 seconds
-- **Daily calculation**: 90-second intervals = 960 calls/day for 16 hours (within 1000 limit)
+- **Daily calculation**: 90-second intervals = 960 calls/day for 16 hours
 - **💡 Tip**: Turn off at night to stay comfortably within NewsAPI limits
 
 ## 📈 Demo Queries
@@ -158,7 +145,6 @@ ORDER BY hour DESC;
 docker-compose down
 ```
 
-## ✨ Academic Value
 
 Demonstrates:
 - ✅ **Real-time streaming** (< 5 min latency)
@@ -166,5 +152,3 @@ Demonstrates:
 - ✅ **Kafka topics & consumers**
 - ✅ **Snowflake integration**
 - ✅ **Separate tables** for different data types
-
-Perfect for academic streaming pipeline demo! 🎯
