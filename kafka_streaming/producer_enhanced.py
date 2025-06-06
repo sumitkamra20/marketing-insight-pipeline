@@ -63,7 +63,7 @@ class SimpleDataProducer:
                 logger.warning("⚠️ NEWS_API_KEY not found in .env file, skipping news data")
                 return None
 
-            url = f"https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey={api_key}&pageSize=1"
+            url = f"https://newsapi.org/v2/top-headlines?sources=bbc-news,cnn,reuters&apiKey={api_key}&pageSize=3"
 
             response = requests.get(url, timeout=5)
 
@@ -75,8 +75,13 @@ class SimpleDataProducer:
                     return {
                         'source': 'news',
                         'headline': article.get('title'),
+                        'description': article.get('description', 'No description available')[:200],
+                        'category': 'business',  # Could enhance with categorization logic
                         'source_name': article.get('source', {}).get('name'),
+                        'url': article.get('url'),
                         'published_at': article.get('publishedAt'),
+                        'word_count': len(article.get('description', '').split()) if article.get('description') else 0,
+                        'has_crypto_mention': 'crypto' in f"{article.get('title', '')} {article.get('description', '')}".lower(),
                         'timestamp': datetime.now().isoformat()
                     }
         except Exception as e:
@@ -88,7 +93,7 @@ class SimpleDataProducer:
         logger.info("🚀 Starting simplified data producer...")
         logger.info("📊 Monitor at Kafka UI: http://localhost:8080")
         logger.info("💰 Bitcoin data: every 30 seconds")
-        logger.info("📰 News data: every 90 seconds (to stay within 1000/day API limit)")
+        logger.info("📰 News data: every 60 seconds (to stay within 1000/day API limit)")
         logger.info("💡 Running 16 hours/day = ~960 news calls (within 1000 limit)")
 
         last_news_fetch = 0
@@ -108,8 +113,8 @@ class SimpleDataProducer:
                     )
                     logger.info(f"📤 Bitcoin: ${bitcoin_data['price']:.2f} ({bitcoin_data['change_24h']:+.2f}%)")
 
-                # Get News data (every 90 seconds to stay within API limits)
-                if current_time - last_news_fetch >= 90:  # 90 seconds = 960 calls/day for 16 hours
+                # Get News data (every 60 seconds to stay within API limits)
+                if current_time - last_news_fetch >= 60:  # 60 seconds = 960 calls/day for 16 hours
                     news_data = self.get_news_data()
                     if news_data:
                         self.producer.produce(

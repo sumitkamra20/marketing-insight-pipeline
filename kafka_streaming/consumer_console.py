@@ -46,12 +46,18 @@ class ConsoleKafkaConsumer:
         return f"💰 Bitcoin: ${price:,.2f} ({change:+.2f}%) at {timestamp}"
 
     def format_news_message(self, data: Dict[str, Any]) -> str:
-        """Format News message for console display"""
-        headline = data.get('headline', 'N/A')[:80] + "..." if len(data.get('headline', '')) > 80 else data.get('headline', 'N/A')
+        """Format Enhanced News message for console display"""
+        headline = data.get('headline', 'N/A')[:60] + "..." if len(data.get('headline', '')) > 60 else data.get('headline', 'N/A')
         source = data.get('source_name', 'Unknown')
+        category = data.get('category', 'general')
+        word_count = data.get('word_count', 0)
+        description = data.get('description', 'No description')[:100] + "..." if len(data.get('description', '')) > 100 else data.get('description', 'No description')
+        has_crypto = data.get('has_crypto_mention', False)
         timestamp = data.get('timestamp', 'N/A')
 
-        return f"📰 News: [{source}] {headline} at {timestamp}"
+        # Enhanced display with analytical fields
+        crypto_flag = "🪙" if has_crypto else "📰"
+        return f"{crypto_flag} News: [{category.upper()}] {source} | {headline}\n    📝 {description}\n    📊 {word_count} words | {timestamp}"
 
     def process_message(self, message):
         """Process and display a single Kafka message"""
@@ -71,6 +77,14 @@ class ConsoleKafkaConsumer:
             elif topic == 'news':
                 formatted_msg = self.format_news_message(data)
                 print(f"[{self.message_counts['news']:3d}] {formatted_msg}")
+
+                # Show enhanced fields summary for news
+                if data.get('description') and len(data.get('description', '')) > 10:
+                    print(f"    🔗 URL: {data.get('url', 'N/A')}")
+                    print(f"    📅 Published: {data.get('published_at', 'N/A')}")
+                    print(f"    ✨ Enhanced data fields: ✅")
+                else:
+                    print(f"    ⚠️  Basic data only - enhanced fields missing")
             else:
                 print(f"❓ Unknown topic '{topic}': {data}")
 

@@ -63,7 +63,7 @@ class SimpleDataProducer:
                 logger.warning("⚠️ NEWS_API_KEY not found in .env file, skipping news data")
                 return None
 
-            url = f"https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey={api_key}&pageSize=1"
+            url = f"https://newsapi.org/v2/top-headlines?category=business&apiKey={api_key}&pageSize=1"
 
             response = requests.get(url, timeout=5)
 

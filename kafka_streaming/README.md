@@ -1,25 +1,27 @@
 # 🚀 Bitcoin & News Streaming Pipeline
 
-Simple **real-time streaming** from Bitcoin prices and news headlines to Snowflake via Kafka.
+**Enhanced** real-time streaming from Bitcoin prices and **enriched news data** to Snowflake via Kafka.
 
 ## 📊 Data Sources
 
 ### ✅ **No API Key Required (Works Immediately)**
 - **CoinGecko API**: Real-time Bitcoin prices & 24hr changes
 
-### 🔑 **Free API Key (Optional)**
-- **NewsAPI**: Live business news headlines (1,000 calls/day free)
+### 🔑 **Enhanced News Data (Free API Key)**
+- **NewsAPI**: Rich business news with descriptions, categories, sentiment analysis
+- **Multiple Sources**: BBC News, CNN, Reuters for variety
+- **Analytical Fields**: Word count, URLs, crypto mentions, categorization
 
 ## 🏗️ Architecture
 
 ```
-Bitcoin API → Producer → Kafka Topics → Consumer → Snowflake Tables
-News API         ↓           ↓            ↓              ↓
-    ↓         JSON       2 Topics    Real-time      STREAMING
-    ↓        Events      bitcoin     Processing     Schema
-    ↓                    news                       bitcoin_prices
-    ↓                                              news_headlines
-    └── Real-time data every 10 seconds ──────────────┘
+Bitcoin API → Enhanced Producer → Kafka Topics → Consumer → Snowflake Tables
+News APIs        ↓                   ↓            ↓              ↓
+(BBC/CNN/        ↓               2 Topics    Real-time      STREAMING
+Reuters)         ↓               bitcoin     Processing     Schema
+    ↓            ↓               news                       bitcoin_prices
+    ↓            ↓                                         news_enriched
+    └── Enhanced data every 30-60 seconds ──────────────────┘
 ```
 
 ## 🚀 Quick Start
@@ -33,27 +35,17 @@ docker-compose up -d
 
 ### 2. Set Up Environment
 ```bash
-# Create virtual environment
-python -m venv .env
-source .env/bin/activate  # Windows: .env\Scripts\activate
-
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### 3. Configure APIs (Optional)
+### 3. Configure APIs
 
-**Get Free API Keys:**
-- Weather: https://openweathermap.org/api (1,000 calls/day free)
-- News: https://newsapi.org (1,000 requests/day free)
+**Your NewsAPI key is already configured!** ✅
+- API Key: `e604699632584dbcb054c47c9577b067`
+- Multiple sources: BBC News, CNN, Reuters
 
-**Update `producer_simple.py`:**
-```python
-# Line 53: Replace with your NewsAPI key
-api_key = "YOUR_NEWS_API_KEY"  # Get free at newsapi.org
-```
-
-### 4. Run the Pipeline
+### 4. Run the Enhanced Pipeline
 
 #### **Option A: Test with Console First (Recommended)**
 
@@ -62,12 +54,12 @@ api_key = "YOUR_NEWS_API_KEY"  # Get free at newsapi.org
 python consumer_console.py
 ```
 
-**Terminal 2 - Start Producer:**
+**Terminal 2 - Start Enhanced Producer:**
 ```bash
-python producer_simple.py
+python producer_enhanced.py
 ```
 
-Verify data format and APIs working, then move to Snowflake:
+Verify rich data format, then move to Snowflake:
 
 #### **Option B: Full Pipeline with Snowflake**
 
@@ -76,30 +68,38 @@ Verify data format and APIs working, then move to Snowflake:
 python consumer_snowflake.py
 ```
 
-**Terminal 2 - Start Producer:**
+**Terminal 2 - Start Enhanced Producer:**
 ```bash
-python producer_simple.py
+python producer_enhanced.py
 ```
 
-## 📋 What You'll See
+## 📋 Enhanced Data Structure
 
-### Producer Logs:
-```
-🚀 Starting simplified data producer...
-📤 Bitcoin: $67,234.50 (+2.34%)
-📰 News: Reuters
-```
-
-### Consumer Logs:
-```
-✅ Connected to Snowflake
-💰 Bitcoin data inserted: $67,234.50 (+2.34%)
-📰 News data inserted: Reuters
+### **Bitcoin Data (Every 30 seconds):**
+```json
+{
+  "source": "bitcoin",
+  "price": 104272.00,
+  "change_24h": -1.03,
+  "timestamp": "2025-01-15T10:30:45"
+}
 ```
 
-### Snowflake Tables:
-- `STREAMING.BITCOIN_PRICES` - Real Bitcoin prices & 24hr changes
-- `STREAMING.NEWS_HEADLINES` - Live business news headlines
+### **Enhanced News Data (Every 60 seconds):**
+```json
+{
+  "source": "news",
+  "headline": "Fed Signals Rate Cuts Amid Inflation Concerns",
+  "description": "Federal Reserve officials indicated potential interest rate reductions...",
+  "category": "economy",
+  "source_name": "Reuters",
+  "url": "https://...",
+  "published_at": "2025-01-15T10:30:00Z",
+  "word_count": 156,
+  "has_crypto_mention": false,
+  "timestamp": "2025-01-15T10:30:45"
+}
+```
 
 ## 🔍 Monitoring
 
@@ -107,34 +107,40 @@ python producer_simple.py
 - **Topics**: `bitcoin`, `news`
 - **Latency**: < 5 seconds from API to Snowflake
 
-## ⚡ API Rate Limits & Frequency
+## ⚡ Demo-Optimized Frequency
 
-- **Bitcoin API (CoinGecko)**: Unlimited, fetched every 30 seconds
-- **News API**: 1,000 requests/day free tier, fetched every 90 seconds
-- **Daily calculation**: 90-second intervals = 960 calls/day for 16 hours
-- **💡 Tip**: Turn off at night to stay comfortably within NewsAPI limits
+- **Bitcoin API**: Every 30 seconds (unlimited)
+- **Enhanced News API**: Every 60 seconds (perfect for 1-hour demo)
+- **Demo Usage**: ~60 news calls/hour (well within limits)
+- **Rich Analytics**: Categories, sentiment keywords, word counts
 
-## 📈 Demo Queries
+## 📈 Enhanced Demo Queries
 
 ```sql
--- Real-time Bitcoin prices
+-- Real-time Bitcoin prices with trends
 SELECT price, change_24h, event_timestamp
 FROM STREAMING.BITCOIN_PRICES
 ORDER BY ingestion_timestamp DESC LIMIT 10;
 
--- Latest business news
-SELECT headline, source_name, published_at
-FROM STREAMING.NEWS_HEADLINES
+-- Rich news analytics
+SELECT
+    headline,
+    category,
+    source_name,
+    word_count,
+    has_crypto_mention,
+    published_at
+FROM STREAMING.NEWS_ENRICHED
 ORDER BY ingestion_timestamp DESC LIMIT 5;
 
--- Price trend analysis
+-- News categorization analysis
 SELECT
-    DATE_TRUNC('hour', event_timestamp) as hour,
-    AVG(price) as avg_price,
-    AVG(change_24h) as avg_change
-FROM STREAMING.BITCOIN_PRICES
-GROUP BY hour
-ORDER BY hour DESC;
+    category,
+    COUNT(*) as article_count,
+    AVG(word_count) as avg_word_count
+FROM STREAMING.NEWS_ENRICHED
+GROUP BY category
+ORDER BY article_count DESC;
 ```
 
 ## 🛑 Shutdown
@@ -145,10 +151,15 @@ ORDER BY hour DESC;
 docker-compose down
 ```
 
+## ✨ Enhanced Academic Value
 
 Demonstrates:
 - ✅ **Real-time streaming** (< 5 min latency)
-- ✅ **Live external APIs** (Bitcoin prices + news)
+- ✅ **Multiple live APIs** (Bitcoin + Multi-source news)
+- ✅ **Rich data structures** (analytical fields, categorization)
 - ✅ **Kafka topics & consumers**
 - ✅ **Snowflake integration**
-- ✅ **Separate tables** for different data types
+- ✅ **Demo-optimized timing** (60-second news for 1-hour presentation)
+- ✅ **Analytical potential** (sentiment, categories, word counts)
+
+Perfect for academic streaming pipeline demonstration! 🎯
