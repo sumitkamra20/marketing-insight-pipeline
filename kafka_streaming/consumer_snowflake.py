@@ -26,7 +26,7 @@ class SnowflakeKafkaConsumer:
         self.consumer = Consumer({
             'bootstrap.servers': 'localhost:9092',
             'group.id': 'snowflake-sink-group',
-            'auto.offset.reset': 'earliest',
+            'auto.offset.reset': 'latest',
             'enable.auto.commit': True,
             'session.timeout.ms': 6000,
             'heartbeat.interval.ms': 1000
@@ -36,7 +36,7 @@ class SnowflakeKafkaConsumer:
         self.snowflake_config = {
             'user': os.getenv('SNOWFLAKE_USER', 'kafka_streaming'),  # or 'dbt_marketing'
             'password': os.getenv('SNOWFLAKE_PASSWORD', 'kafkaPassword123'),  # or 'dbtPassword123'
-            'account': os.getenv('SNOWFLAKE_ACCOUNT', 'your_account_identifier'),  # Update this!
+            'account': os.getenv('SNOWFLAKE_ACCOUNT', 'BRVIXQZ-AQ58231'),  # Correct format from account details
             'warehouse': 'MARKETING_WH',  # Using your existing warehouse
             'database': 'MARKETING_INSIGHTS_DB',  # Using your existing database
             'schema': 'STREAMING',
@@ -71,9 +71,10 @@ class SnowflakeKafkaConsumer:
         cursor = self.snowflake_conn.cursor()
 
         tables = {
-            'bitcoin_prices': """
-                CREATE TABLE IF NOT EXISTS bitcoin_prices (
+            'bitcoin_prices_raw': """
+                CREATE TABLE IF NOT EXISTS bitcoin_prices_raw (
                     id STRING DEFAULT UUID_STRING(),
+                    source STRING,
                     price FLOAT,
                     change_24h FLOAT,
                     event_timestamp TIMESTAMP_NTZ,
@@ -81,12 +82,18 @@ class SnowflakeKafkaConsumer:
                     PRIMARY KEY (id)
                 )
             """,
-            'news_headlines': """
-                CREATE TABLE IF NOT EXISTS news_headlines (
+            'news_events_raw': """
+                CREATE TABLE IF NOT EXISTS news_events_raw (
                     id STRING DEFAULT UUID_STRING(),
+                    source STRING,
                     headline STRING,
+                    description STRING,
+                    category STRING,
                     source_name STRING,
+                    url STRING,
                     published_at TIMESTAMP_NTZ,
+                    word_count INTEGER,
+                    has_crypto_mention BOOLEAN,
                     event_timestamp TIMESTAMP_NTZ,
                     ingestion_timestamp TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
                     PRIMARY KEY (id)
@@ -108,9 +115,9 @@ class SnowflakeKafkaConsumer:
         cursor = self.snowflake_conn.cursor()
         try:
             cursor.execute("""
-                INSERT INTO bitcoin_prices
-                (price, change_24h, event_timestamp)
-                VALUES (%(price)s, %(change_24h)s, %(timestamp)s)
+                INSERT INTO bitcoin_prices_raw
+                (source, price, change_24h, event_timestamp)
+                VALUES (%(source)s, %(price)s, %(change_24h)s, %(timestamp)s)
             """, data)
             logger.info(f"💰 Bitcoin data inserted: ${data.get('price', 0):.2f} ({data.get('change_24h', 0):+.2f}%)")
         except Exception as e:
@@ -118,10 +125,8 @@ class SnowflakeKafkaConsumer:
         finally:
             cursor.close()
 
-
-
     def insert_news_data(self, data: Dict[str, Any]):
-        """Insert news data to Snowflake"""
+        """Insert enhanced news data to Snowflake"""
         cursor = self.snowflake_conn.cursor()
         try:
             # Convert published_at to timestamp if needed
@@ -133,17 +138,18 @@ class SnowflakeKafkaConsumer:
                     data['published_at'] = None
 
             cursor.execute("""
-                INSERT INTO news_headlines
-                (headline, source_name, published_at, event_timestamp)
-                VALUES (%(headline)s, %(source_name)s, %(published_at)s, %(timestamp)s)
+                INSERT INTO news_events_raw
+                (source, headline, description, category, source_name, url,
+                 published_at, word_count, has_crypto_mention, event_timestamp)
+                VALUES (%(source)s, %(headline)s, %(description)s, %(category)s,
+                        %(source_name)s, %(url)s, %(published_at)s, %(word_count)s,
+                        %(has_crypto_mention)s, %(timestamp)s)
             """, data)
-            logger.info(f"📰 News data inserted: {data.get('source_name', 'Unknown')}")
+            logger.info(f"📰 Enhanced news inserted: [{data.get('category', 'general')}] {data.get('source_name', 'Unknown')}")
         except Exception as e:
             logger.error(f"❌ News insert error: {e}")
         finally:
             cursor.close()
-
-
 
     def process_message(self, message):
         """Process a single Kafka message"""
