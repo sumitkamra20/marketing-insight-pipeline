@@ -1,0 +1,27 @@
+# dbt_pipeline/profiles.yml
+dbt_pipeline:
+  target: dev
+  outputs:
+    dev:
+      account: BRVIXQZ-AQ58231
+      user: dbt_marketing
+      password: dbtPassword123
+      warehouse: MARKETING_WH
+      database: MARKETING_INSIGHTS_DB
+      schema: dbt_skamra
+      role: TRANSFORM
+      type: snowflake
+      threads: 4
+      client_session_keep_alive: false
+
+    prod:
+      account: BRVIXQZ-AQ58231
+      user: dbt_marketing
+      password: dbtPassword123
+      warehouse: MARKETING_WH
+      database: MARKETING_INSIGHTS_DB
+      schema: analytics            # Production schema
+      role: TRANSFORM
+      type: snowflake
+      threads: 4
+      client_session_keep_alive: false

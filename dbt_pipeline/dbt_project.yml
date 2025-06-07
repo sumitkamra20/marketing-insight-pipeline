@@ -33,5 +33,10 @@ models:
     # Config indicated by + and applies to all files under models/example/
     stg:
       +materialized: view
+      +schema: analytics
     marts:
       +materialized: table
+      +schema: analytics
+    stream_stg:
+      +materialized: incremental
+      +schema: streaming
