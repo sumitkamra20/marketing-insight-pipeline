@@ -6,7 +6,7 @@
           target_schema='snapshots',
           unique_key='customer_id',
           strategy='check',
-          check_cols=['customer_tenure_months', 'customer_segment'],
+          check_cols='all',
         )
     }}
 

@@ -1,4 +1,4 @@
---I created simple macros to categorize sales sizes and add timestamps.
+--Simple macros to categorize sales sizes and add timestamps.
 -- Simple macro to generate current timestamp for audit fields
 {% macro get_current_timestamp() %}
     {{ return("current_timestamp()") }}

@@ -258,7 +258,33 @@ dbt test --select fct_sales --store-failures-as table
 ### 3. 🔧 Custom Generic Test Demo
 **Shows custom `valid_transaction_amount` test in action**
 
-Our custom test validates business rules: transaction amounts between $0-$15,000
+#### **Implementation Details:**
+- **File**: `macros/test_valid_transaction_amount.sql`
+- **Applied to**: `fct_sales.total_amount` column in `models/marts/schema.yml`
+- **Business Rule**: Transaction amounts between $0-$15,000
+- **Configuration**: `severity: warn` (warns but doesn't fail build)
+
+```yaml
+# In models/marts/schema.yml
+- name: total_amount
+  description: "Final transaction amount"
+  tests:
+    - valid_transaction_amount:
+        min_amount: 0
+        max_amount: 15000
+        config:
+          severity: warn
+```
+
+#### **Test Logic:**
+```sql
+-- Returns count of invalid records (test passes if count = 0)
+select count(*)
+from {{ model }}
+where {{ column_name }} < {{ min_amount }}
+   or {{ column_name }} > {{ max_amount }}
+   or {{ column_name }} is null
+```
 
 ```bash
 cd dbt_pipeline
@@ -269,35 +295,71 @@ dbt test --select test_name:valid_transaction_amount
 
 # Show test definition
 echo "=== Custom Test Implementation ==="
-cat tests/generic/valid_transaction_amount.sql
+cat macros/test_valid_transaction_amount.sql
 
 # Test with edge cases
 echo "=== Running Custom Test with Warnings ==="
 dbt test --select valid_transaction_amount --warn-error
+
+# Show which records would fail (if any)
+echo "=== Show Invalid Records (Demo Purpose) ==="
+dbt test --select fct_sales:total_amount --store-failures
 ```
 
 ### 4. 🔨 Custom Macro Demo
 **Shows reusable SQL logic with `categorize_sale_size` and `get_current_timestamp`**
 
+#### **Implementation Details:**
+- **File**: `macros/calculate_revenue_metrics.sql`
+- **Used in**: `models/marts/fct_sales.sql` (lines 86 & 89)
+- **Purpose**: Business logic reuse and audit trail
+
+#### **Macro 1: `categorize_sale_size`**
+```sql
+# In fct_sales.sql (line 86):
+{{ categorize_sale_size('(s.quantity * s.avg_price)') }} as sale_size_category,
+
+# Generates:
+case
+    when (s.quantity * s.avg_price) < 50 then 'Small'
+    when (s.quantity * s.avg_price) between 50 and 200 then 'Medium'
+    when (s.quantity * s.avg_price) between 201 and 500 then 'Large'
+    else 'Extra Large'
+end as sale_size_category
+```
+
+#### **Macro 2: `get_current_timestamp`**
+```sql
+# In fct_sales.sql (line 89):
+{{ get_current_timestamp() }} as processed_at
+
+# Generates:
+current_timestamp() as processed_at
+```
+
 ```bash
 cd dbt_pipeline
 
-# Show macro definition
-echo "=== Custom Macro: categorize_sale_size ==="
-cat macros/categorize_sale_size.sql
+# Show macro definitions
+echo "=== Custom Macros Implementation ==="
+cat macros/calculate_revenue_metrics.sql
 
 # Compile model to see macro expansion
-echo "=== Macro in Action (Compiled SQL) ==="
+echo "=== Macros in Action (Compiled SQL) ==="
 dbt compile --select fct_sales
-cat target/compiled/dbt_pipeline/models/marts/fct_sales.sql | grep -A 10 -B 5 "categorize_sale_size"
+cat target/compiled/dbt_pipeline/models/marts/fct_sales.sql | grep -A 5 -B 2 "case.*Small\|current_timestamp"
 
-# Run model using macro
-echo "=== Running Model with Custom Macro ==="
+# Run model using macros
+echo "=== Running Model with Custom Macros ==="
 dbt run --select fct_sales
 
-# Show macro results
+# Show macro results - Sale Categories
 echo "=== Macro Output: Sale Size Categories ==="
-dbt run-operation query --args "select sale_size_category, count(*) from {{ ref('fct_sales') }} group by 1"
+dbt run-operation query --args "select sale_size_category, count(*) as transaction_count, round(avg(total_amount), 2) as avg_amount from {{ ref('fct_sales') }} group by 1 order by avg_amount"
+
+# Show macro results - Processing Timestamps
+echo "=== Macro Output: Processing Audit Trail ==="
+dbt run-operation query --args "select min(processed_at) as first_processed, max(processed_at) as last_processed, count(*) as total_records from {{ ref('fct_sales') }}"
 ```
 
 ### 5. 📸 dbt Snapshot Demo (SCD Type 2)
@@ -434,6 +496,35 @@ echo "✅ === DEMO COMPLETE ==="
 
 ---
 
+---
+
+## 🎯 **Advanced dbt Features - Implementation Summary**
+
+### 🔧 **Custom Generic Tests**
+| Feature | File | Applied To | Purpose |
+|---------|------|------------|---------|
+| `valid_transaction_amount` | `macros/test_valid_transaction_amount.sql` | `fct_sales.total_amount` | Validates business rules: $0-$15K range |
+
+### 🔨 **Custom Macros**
+| Macro | File | Used In | Line | Purpose |
+|-------|------|---------|------|---------|
+| `categorize_sale_size` | `macros/calculate_revenue_metrics.sql` | `fct_sales.sql` | 86 | Categorizes transactions: Small/Medium/Large/Extra Large |
+| `get_current_timestamp` | `macros/calculate_revenue_metrics.sql` | `fct_sales.sql` | 89 | Adds audit timestamp for data lineage |
+
+### 📸 **SCD Type 2 Snapshots**
+| Feature | File | Target Schema | Strategy | Purpose |
+|---------|------|---------------|----------|---------|
+| `customer_history` | `snapshots/customer_history.sql` | `SNAPSHOTS` | `check_cols='all'` | Tracks all customer data changes over time |
+
+### 📈 **Incremental Models**
+| Model | File | Strategy | Purpose |
+|-------|------|----------|---------|
+| `fct_sales` | `models/marts/fct_sales.sql` | `unique_key='transaction_id'` | Processes only new transactions |
+| `stg_bitcoin` | `models/stream_stg/stg_bitcoin.sql` | `unique_key + timestamp` | Real-time Bitcoin price processing |
+| `stg_news` | `models/stream_stg/stg_news.sql` | `unique_key + timestamp` | Real-time news event processing |
+
+---
+
 ## 📈 Key Metrics & Achievements
 
 - **📊 Data Models**: 12 dbt models (5 staging, 4 marts, 2 streaming, 1 seed)
@@ -443,6 +534,7 @@ echo "✅ === DEMO COMPLETE ==="
 - **🔄 CI/CD**: Automated testing and deployment via GitHub Actions
 - **📖 Documentation**: Complete data lineage and business logic documentation
 - **🏗️ Architecture**: Production-ready with incremental processing and SCD tracking
+- **🔧 Advanced dbt**: Custom tests, macros, snapshots, and incremental models
 
 ## 🛠️ Technology Stack
 
