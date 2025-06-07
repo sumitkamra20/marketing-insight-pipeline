@@ -20,30 +20,19 @@ This capstone project implements a **comprehensive data engineering pipeline** t
 
 ```mermaid
 graph TB
-    subgraph "Data Sources"
-        API1[CoinGecko API<br/>Bitcoin Prices]
-        API2[NewsAPI<br/>Market News]
-        CSV[CSV Files<br/>Historical Data]
-    end
+    subgraph "STREAMING PIPELINE"
+        subgraph "External APIs"
+            API1[CoinGecko API<br/>Bitcoin Prices]
+            API2[NewsAPI<br/>Market News]
+        end
 
-    subgraph "Kafka Streaming Layer"
-        K[Kafka Cluster<br/>Docker]
-        PROD[Producer<br/>Real Data]
-        CONS[Consumer<br/>Snowflake]
-    end
+        subgraph "Kafka Layer"
+            KAFKA[Kafka Cluster<br/>Topics: bitcoin-prices, news-events]
+        end
 
-    subgraph "Snowflake Data Warehouse"
         subgraph "STREAMING Schema"
             BTC_RAW[bitcoin_prices_raw]
             NEWS_RAW[news_events_raw]
-        end
-
-        subgraph "RAW Schema"
-            CUST[customers]
-            SALES[online_sales]
-            MARKET[marketing_spend]
-            DISC[discount_coupon]
-            TAX[tax_amount]
         end
 
         subgraph "DBT_SKAMRA_STREAMING Schema"
@@ -51,72 +40,73 @@ graph TB
             STG_NEWS[stg_news]
         end
 
+        SCHED1[dbt Cloud<br/>Hourly Scheduling]
+
+        API1 --> KAFKA
+        API2 --> KAFKA
+        KAFKA --> BTC_RAW
+        KAFKA --> NEWS_RAW
+        BTC_RAW --> SCHED1
+        NEWS_RAW --> SCHED1
+        SCHED1 --> STG_BTC
+        SCHED1 --> STG_NEWS
+    end
+
+    subgraph "BATCH PIPELINE"
+        subgraph "Source Files"
+            CSV[Kaggle CSV Files<br/>customers, sales, marketing, etc.]
+        end
+
+        subgraph "RAW Schema"
+            RAW_CUST[customers]
+            RAW_SALES[online_sales]
+            RAW_MARKET[marketing_spend]
+            RAW_DISC[discount_coupon]
+            RAW_TAX[tax_amount]
+        end
+
         subgraph "DBT_SKAMRA_ANALYTICS Schema"
-            subgraph "Staging Views"
-                STG_C[stg_customers]
-                STG_S[stg_online_sales]
-                STG_M[stg_marketing_spend]
-                STG_D[stg_discount_coupon]
-                STG_T[stg_tax_amount]
+            subgraph "Staging Layer"
+                STG_CUST[stg_customers]
+                STG_SALES[stg_online_sales]
+                STG_MARKET[stg_marketing_spend]
+                STG_DISC[stg_discount_coupon]
+                STG_TAX[stg_tax_amount]
             end
 
-            subgraph "Dimension Tables"
-                DIM_C[dim_customer]
-                DIM_P[dim_products]
-                DIM_D[dim_datetime]
-            end
-
-            subgraph "Fact Tables"
-                FCT_S[fct_sales]
+            subgraph "Dimensional Layer"
+                DIM_CUST[dim_customer]
+                DIM_PROD[dim_products]
+                DIM_DATE[dim_datetime]
+                FCT_SALES[fct_sales]
             end
         end
+
+        CSV --> RAW_CUST
+        CSV --> RAW_SALES
+        CSV --> RAW_MARKET
+        CSV --> RAW_DISC
+        CSV --> RAW_TAX
+
+        RAW_CUST --> STG_CUST
+        RAW_SALES --> STG_SALES
+        RAW_MARKET --> STG_MARKET
+        RAW_DISC --> STG_DISC
+        RAW_TAX --> STG_TAX
+
+        STG_CUST --> DIM_CUST
+        STG_SALES --> DIM_PROD
+        STG_SALES --> DIM_DATE
+
+        STG_CUST --> FCT_SALES
+        STG_SALES --> FCT_SALES
+        STG_MARKET --> FCT_SALES
+        STG_DISC --> FCT_SALES
+        STG_TAX --> FCT_SALES
+        DIM_CUST --> FCT_SALES
+        DIM_PROD --> FCT_SALES
+        DIM_DATE --> FCT_SALES
     end
-
-    subgraph "Orchestration"
-        DBT_CLOUD[dbt Cloud<br/>Scheduled Jobs]
-        GITHUB[GitHub Actions<br/>CI/CD]
-    end
-
-    API1 --> PROD
-    API2 --> PROD
-    PROD --> K
-    K --> CONS
-    CONS --> BTC_RAW
-    CONS --> NEWS_RAW
-
-    CSV --> CUST
-    CSV --> SALES
-    CSV --> MARKET
-    CSV --> DISC
-    CSV --> TAX
-
-    BTC_RAW --> STG_BTC
-    NEWS_RAW --> STG_NEWS
-
-    CUST --> STG_C
-    SALES --> STG_S
-    MARKET --> STG_M
-    DISC --> STG_D
-    TAX --> STG_T
-
-    STG_C --> DIM_C
-    STG_S --> DIM_P
-    STG_S --> DIM_D
-    STG_C --> DIM_D
-
-    STG_S --> FCT_S
-    STG_M --> FCT_S
-    STG_D --> FCT_S
-    STG_T --> FCT_S
-    DIM_C --> FCT_S
-    DIM_P --> FCT_S
-    DIM_D --> FCT_S
-
-    DBT_CLOUD --> STG_BTC
-    DBT_CLOUD --> STG_NEWS
-    DBT_CLOUD --> FCT_S
-
-    GITHUB --> DBT_CLOUD
 ```
 
 ### Data Processing Layers
