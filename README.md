@@ -233,15 +233,15 @@ erDiagram
 
 ---
 
-## Grading Criteria Implementation
+## Technical Implementation
 
-### ✅ CI/CD Setup (5 points)
+### CI/CD & DevOps
 **Implementation:**
 - GitHub Actions workflow: `.github/workflows/dbt_ci.yml`
 - Automated dbt tests and linting on pull requests
 - Integration with dbt Cloud for production deployments
 
-**Test Commands:**
+**Validation Commands:**
 ```bash
 # Run CI workflow locally (requires GitHub CLI)
 gh workflow run dbt_ci.yml
@@ -250,16 +250,16 @@ gh workflow run dbt_ci.yml
 gh run list --workflow=dbt_ci.yml
 ```
 
-### ✅ Streaming Data Ingestion (15 points total)
+### Real-Time Streaming Pipeline
 
-#### Kafka Pipeline (10 points)
+#### Kafka Infrastructure
 **Implementation:**
 - Kafka cluster via Docker Compose: `kafka_streaming/docker-compose.yml`
 - Producer: `kafka_streaming/producer_real_data.py` (CoinGecko + NewsAPI)
 - Consumer: `kafka_streaming/consumer_snowflake.py` (Snowflake integration)
 - Topics: `bitcoin-prices`, `news-events`
 
-**Test Commands:**
+**Validation Commands:**
 ```bash
 # Start Kafka cluster
 cd kafka_streaming
@@ -271,40 +271,38 @@ python producer_real_data.py
 # Run consumer (in separate terminal)
 python consumer_snowflake.py
 
-# Verify data ingestion
-# Check Snowflake STREAMING schema tables
+# Verify data ingestion in Snowflake STREAMING schema
 ```
 
-#### Real-time Data Landing (5 points)
+#### Data Ingestion & Latency
 **Implementation:**
 - Data latency: ~30 seconds for Bitcoin, ~60 seconds for News
 - Direct Snowflake ingestion via consumer
 - Tables: `STREAMING.bitcoin_prices_raw`, `STREAMING.news_events_raw`
 
-### ✅ dbt Project Setup & Development (25 points total)
+### dbt Data Transformation
 
-#### Orchestration Tool (5 points)
+#### Production Orchestration
 **Implementation:**
 - dbt Cloud with scheduled jobs
 - Job: "Streaming Data Materialization" (hourly)
 - Command: `dbt run --select tag:streaming`
 
-**Test Commands:**
+**Validation Commands:**
 ```bash
 # Test dbt Cloud connection
 dbt debug
 
-# Manual job trigger
-# Via dbt Cloud UI or API
+# Manual job trigger via dbt Cloud UI
 ```
 
-#### Model Creation (5 points)
+#### Data Model Architecture
 **Implementation:**
 - 11 total dbt models across staging and marts layers
 - Medallion architecture: Bronze → Silver → Gold
 - Models: 5 staging views + 3 dimension tables + 1 fact table + 2 streaming models
 
-**Test Commands:**
+**Validation Commands:**
 ```bash
 cd dbt_pipeline
 
@@ -317,13 +315,13 @@ dbt run --select stg
 dbt run --select tag:streaming
 ```
 
-#### Incremental Materialization (5 points)
+#### Incremental Processing
 **Implementation:**
 - `fct_sales`: Incremental fact table with merge strategy
 - `stg_bitcoin`: Incremental streaming model with event_timestamp
 - `stg_news`: Incremental streaming model with event_timestamp
 
-**Test Commands:**
+**Validation Commands:**
 ```bash
 # Test incremental runs
 dbt run --select fct_sales
@@ -333,13 +331,13 @@ dbt run --select tag:streaming
 dbt run --select fct_sales --full-refresh
 ```
 
-#### Testing Implementation (5 points)
+#### Data Quality & Testing
 **Implementation:**
 - Generic tests: Primary keys, foreign keys, not_null, unique
 - Singular tests: Business logic validation
 - Total: 51 tests across all models
 
-**Test Commands:**
+**Validation Commands:**
 ```bash
 # Run all tests
 dbt test
@@ -354,13 +352,13 @@ dbt test --select test_type:generic
 dbt test --select test_type:singular
 ```
 
-#### Custom Macro (5 points)
+#### Custom Development
 **Implementation:**
 - Custom macro: `calculate_total_amount.sql`
 - Jinja logic for dynamic SQL generation
 - Used in `fct_sales` model
 
-**Test Commands:**
+**Validation Commands:**
 ```bash
 # Compile and check macro usage
 dbt compile --select fct_sales
@@ -369,13 +367,13 @@ dbt compile --select fct_sales
 dbt run --select fct_sales
 ```
 
-### ✅ Documentation (5 points)
+### Documentation & Lineage
 **Implementation:**
 - Column documentation in schema.yml files
 - Model descriptions and business logic
 - Data lineage via dbt docs
 
-**Test Commands:**
+**Validation Commands:**
 ```bash
 # Generate documentation
 dbt docs generate
@@ -384,38 +382,25 @@ dbt docs generate
 dbt docs serve
 ```
 
-### ✅ Data Modeling (10 points)
+### Data Modeling Approach
 
-#### ERD Documentation (5 points)
-**Implementation:**
-- Comprehensive ERD above
-- Star schema design rationale
-- Detailed in `dbt_pipeline/DATA_MODELING_APPROACH.md`
-
-#### Modeling Approach (5 points)
+#### Design Philosophy
 **Implementation:**
 - **Approach**: Dimensional Modeling with Star Schema
 - **Rationale**: Optimized for analytical workloads, business user accessibility
-- **Alternative**: Considered Data Vault 2.0 and 3NF, rejected for complexity/performance reasons
+- **Alternative Considerations**: Data Vault 2.0 and 3NF evaluated and rejected for complexity/performance reasons
+- **Documentation**: Detailed design rationale in `dbt_pipeline/DATA_MODELING_APPROACH.md`
 
-### 🔄 ML Model Deployment & Prediction Pipeline (15 points)
-**Status**: Pending Implementation
-- Basic ML model with data processing, feature selection, training, evaluation
-- Model execution orchestration
-- Code-based implementation required
+### Technology Stack & Advanced Features
 
-### ✅ Bonus & Creativity (15 points available)
-
-#### Additional Tools (10 points)
-**Current Tools Used:**
+#### Core Technologies
 - **Snowflake**: Data warehouse platform
 - **Kafka**: Real-time streaming
 - **dbt Cloud**: Orchestration and scheduling
 - **GitHub Actions**: CI/CD automation
 - **Docker**: Containerization
 
-#### Advanced Features (5 points per feature, 5 max)
-**Current Features:**
+#### Advanced Capabilities
 - **Real-time API Integration**: Live data from CoinGecko and NewsAPI
 - **Advanced dbt Techniques**: Custom macros, incremental models, comprehensive testing
 - **Production Orchestration**: Automated scheduling with dbt Cloud
@@ -513,26 +498,6 @@ echo "=== Testing by Layer ==="
 dbt test --select marts
 dbt test --select stg
 ```
-
----
-
-## Current Score: 47/90 Points
-
-**Completed:**
-- ✅ Streaming Data Ingestion: 15/15 points
-- ✅ dbt Project Setup & Development: 25/25 points
-- ✅ Documentation: 5/5 points
-- ✅ Data Modeling: 10/10 points
-- ✅ Bonus Features: ~7/15 points
-
-**Pending:**
-- 🔄 CI/CD Setup: 0/5 points (needs demonstration)
-- 🔄 ML Model Pipeline: 0/15 points (needs implementation)
-
-**Next Steps:**
-1. Demonstrate CI/CD workflow functionality
-2. Implement and deploy ML model pipeline
-3. Potentially add more bonus features (monitoring, visualization, advanced analytics)
 
 ---
 
