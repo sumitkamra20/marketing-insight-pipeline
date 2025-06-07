@@ -20,38 +20,6 @@ This capstone project implements a **comprehensive data engineering pipeline** t
 
 ```mermaid
 graph TB
-    subgraph "STREAMING PIPELINE"
-        subgraph "External APIs"
-            API1[CoinGecko API<br/>Bitcoin Prices]
-            API2[NewsAPI<br/>Market News]
-        end
-
-        subgraph "Kafka Layer"
-            KAFKA[Kafka Cluster<br/>Topics: bitcoin-prices, news-events]
-        end
-
-        subgraph "STREAMING Schema"
-            BTC_RAW[bitcoin_prices_raw]
-            NEWS_RAW[news_events_raw]
-        end
-
-        subgraph "DBT_SKAMRA_STREAMING Schema"
-            STG_BTC[stg_bitcoin]
-            STG_NEWS[stg_news]
-        end
-
-        SCHED1[dbt Cloud<br/>Hourly Scheduling]
-
-        API1 --> KAFKA
-        API2 --> KAFKA
-        KAFKA --> BTC_RAW
-        KAFKA --> NEWS_RAW
-        BTC_RAW --> SCHED1
-        NEWS_RAW --> SCHED1
-        SCHED1 --> STG_BTC
-        SCHED1 --> STG_NEWS
-    end
-
     subgraph "BATCH PIPELINE"
         subgraph "Source Files"
             CSV[Kaggle CSV Files<br/>customers, sales, marketing, etc.]
@@ -106,6 +74,38 @@ graph TB
         DIM_CUST --> FCT_SALES
         DIM_PROD --> FCT_SALES
         DIM_DATE --> FCT_SALES
+    end
+
+    subgraph "STREAMING PIPELINE"
+        subgraph "External APIs"
+            API1[CoinGecko API<br/>Bitcoin Prices]
+            API2[NewsAPI<br/>Market News]
+        end
+
+        subgraph "Kafka Layer"
+            KAFKA[Kafka Cluster<br/>Topics: bitcoin-prices, news-events]
+        end
+
+        subgraph "STREAMING Schema"
+            BTC_RAW[bitcoin_prices_raw]
+            NEWS_RAW[news_events_raw]
+        end
+
+        subgraph "DBT_SKAMRA_STREAMING Schema"
+            STG_BTC[stg_bitcoin]
+            STG_NEWS[stg_news]
+        end
+
+        SCHED1[dbt Cloud<br/>Hourly Scheduling]
+
+        API1 --> KAFKA
+        API2 --> KAFKA
+        KAFKA --> BTC_RAW
+        KAFKA --> NEWS_RAW
+        BTC_RAW --> SCHED1
+        NEWS_RAW --> SCHED1
+        SCHED1 --> STG_BTC
+        SCHED1 --> STG_NEWS
     end
 ```
 
