@@ -40,3 +40,13 @@ models:
     stream_stg:
       +materialized: incremental
       +schema: streaming
+
+# Configuring seeds
+seeds:
+  dbt_pipeline:
+    customer_segments:
+      +schema: analytics
+      +column_types:
+        customer_id: number
+        segment_id: number
+        segment_name: varchar(50)

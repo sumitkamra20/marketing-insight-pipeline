@@ -61,3 +61,31 @@ models:
         tests:
           - unique
           - not_null
+
+  - name: fct_customer_segments
+    description: "Customer segmentation facts combining ML-driven segments with RFM analysis and business metrics"
+    columns:
+      - name: customer_id
+        description: "Unique customer identifier (primary key)"
+        tests:
+          - unique
+          - not_null
+      - name: segment_id
+        description: "ML-generated segment ID (0-4)"
+        tests:
+          - accepted_values:
+              values: [0, 1, 2, 3, 4]
+      - name: segment_name
+        description: "Human-readable segment name from ML model"
+        tests:
+          - accepted_values:
+              values: ['Big Spenders', 'At-Risk (Lapsing)', 'Occasional Shoppers', 'Champions (VIPs)', 'Loyal Customers']
+      - name: total_revenue
+        description: "Customer lifetime value (total revenue)"
+        tests:
+          - not_null
+      - name: activity_status
+        description: "Current activity status based on recency"
+        tests:
+          - accepted_values:
+              values: ['Active', 'Recent', 'Dormant', 'Inactive']

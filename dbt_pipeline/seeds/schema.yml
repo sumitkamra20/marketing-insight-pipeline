@@ -1,0 +1,26 @@
+version: 2
+
+seeds:
+  - name: customer_segments
+    description: "ML-generated customer segmentation results from K-means clustering based on RFM analysis"
+    columns:
+      - name: customer_id
+        description: "Unique customer identifier matching fct_sales"
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_id
+      - name: segment_id
+        description: "Numeric segment identifier (0-4) from ML clustering"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1, 2, 3, 4]
+      - name: segment_name
+        description: "Business-friendly segment name for interpretation"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Big Spenders', 'At-Risk (Lapsing)', 'Occasional Shoppers', 'Champions (VIPs)', 'Loyal Customers']
