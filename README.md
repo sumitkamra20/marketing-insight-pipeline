@@ -141,7 +141,7 @@ graph TB
 ```mermaid
 erDiagram
     dim_customer {
-        string customer_id PK
+        string customer_id PK "Primary Key"
         string gender
         string location
         string segment
@@ -152,7 +152,7 @@ erDiagram
     }
 
     dim_products {
-        string product_sku PK
+        string product_sku PK "Primary Key"
         string category
         string gst_rate
         string product_group
@@ -160,7 +160,7 @@ erDiagram
     }
 
     dim_datetime {
-        date date_day PK
+        date date_day PK "Primary Key"
         int year
         int month
         int day
@@ -171,10 +171,10 @@ erDiagram
     }
 
     fct_sales {
-        string transaction_id PK
-        string customer_id FK
-        string product_sku FK
-        date transaction_date FK
+        string transaction_id PK "Primary Key"
+        string customer_id FK "Foreign Key to dim_customer"
+        string product_sku FK "Foreign Key to dim_products"
+        date transaction_date FK "Foreign Key to dim_datetime"
         int quantity
         decimal unit_price
         decimal gross_amount
@@ -184,38 +184,9 @@ erDiagram
         decimal total_amount
     }
 
-    stg_bitcoin {
-        string id PK
-        string source
-        decimal price
-        decimal change_24h
-        string volatility_category
-        timestamp event_timestamp
-        date event_date
-        int event_hour
-        boolean price_valid
-    }
-
-    stg_news {
-        string id PK
-        string source
-        string headline
-        string description
-        string category
-        string source_name
-        string url
-        timestamp published_at
-        int word_count
-        boolean has_crypto_mention
-        timestamp event_timestamp
-        string content_category
-        string source_category
-        int headline_length_category
-    }
-
-    dim_customer ||--o{ fct_sales : "customer_id"
-    dim_products ||--o{ fct_sales : "product_sku"
-    dim_datetime ||--o{ fct_sales : "transaction_date"
+    dim_customer ||--o{ fct_sales : "One customer to many sales"
+    dim_products ||--o{ fct_sales : "One product to many sales"
+    dim_datetime ||--o{ fct_sales : "One date to many sales"
 ```
 
 ### ERD Rationale
@@ -226,10 +197,11 @@ erDiagram
 - **Scalable**: Easy to add new dimensions without affecting existing structure
 - **Time Intelligence**: Complete date dimension supports time-series analysis
 
-**Streaming Data Integration:**
-- Separate staging models for real-time data (Bitcoin, News) to avoid mixing with batch processing
-- Event timestamp preservation for temporal analysis
-- Data quality flags and categorization for analytical insights
+**Relationship Structure:**
+- **One-to-Many**: Each dimension can relate to multiple fact records
+- **Clear Foreign Keys**: Explicit FK relationships ensure data integrity
+- **Surrogate Keys**: Business keys used for natural relationships
+- **Additive Facts**: All monetary measures can be safely aggregated
 
 ---
 
