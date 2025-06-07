@@ -18,95 +18,98 @@ This capstone project implements a **comprehensive data engineering pipeline** t
 
 ### High-Level Data Flow
 
+#### Batch Processing Pipeline
+
 ```mermaid
-graph TB
-    subgraph "BATCH PIPELINE"
-        subgraph "Source Files"
-            CSV[Kaggle CSV Files<br/>customers, sales, marketing, etc.]
-        end
-
-        subgraph "RAW Schema"
-            RAW_CUST[customers]
-            RAW_SALES[online_sales]
-            RAW_MARKET[marketing_spend]
-            RAW_DISC[discount_coupon]
-            RAW_TAX[tax_amount]
-        end
-
-        subgraph "DBT_SKAMRA_ANALYTICS Schema"
-            subgraph "Staging Layer"
-                STG_CUST[stg_customers]
-                STG_SALES[stg_online_sales]
-                STG_MARKET[stg_marketing_spend]
-                STG_DISC[stg_discount_coupon]
-                STG_TAX[stg_tax_amount]
-            end
-
-            subgraph "Dimensional Layer"
-                DIM_CUST[dim_customer]
-                DIM_PROD[dim_products]
-                DIM_DATE[dim_datetime]
-                FCT_SALES[fct_sales]
-            end
-        end
-
-        CSV --> RAW_CUST
-        CSV --> RAW_SALES
-        CSV --> RAW_MARKET
-        CSV --> RAW_DISC
-        CSV --> RAW_TAX
-
-        RAW_CUST --> STG_CUST
-        RAW_SALES --> STG_SALES
-        RAW_MARKET --> STG_MARKET
-        RAW_DISC --> STG_DISC
-        RAW_TAX --> STG_TAX
-
-        STG_CUST --> DIM_CUST
-        STG_SALES --> DIM_PROD
-        STG_SALES --> DIM_DATE
-
-        STG_CUST --> FCT_SALES
-        STG_SALES --> FCT_SALES
-        STG_MARKET --> FCT_SALES
-        STG_DISC --> FCT_SALES
-        STG_TAX --> FCT_SALES
-        DIM_CUST --> FCT_SALES
-        DIM_PROD --> FCT_SALES
-        DIM_DATE --> FCT_SALES
+graph LR
+    subgraph "Source Files"
+        CSV[Kaggle CSV Files<br/>customers, sales, marketing, etc.]
     end
 
-    subgraph "STREAMING PIPELINE"
-        subgraph "External APIs"
-            API1[CoinGecko API<br/>Bitcoin Prices]
-            API2[NewsAPI<br/>Market News]
-        end
-
-        subgraph "Kafka Layer"
-            KAFKA[Kafka Cluster<br/>Topics: bitcoin-prices, news-events]
-        end
-
-        subgraph "STREAMING Schema"
-            BTC_RAW[bitcoin_prices_raw]
-            NEWS_RAW[news_events_raw]
-        end
-
-        subgraph "DBT_SKAMRA_STREAMING Schema"
-            STG_BTC[stg_bitcoin]
-            STG_NEWS[stg_news]
-        end
-
-        SCHED1[dbt Cloud<br/>Hourly Scheduling]
-
-        API1 --> KAFKA
-        API2 --> KAFKA
-        KAFKA --> BTC_RAW
-        KAFKA --> NEWS_RAW
-        BTC_RAW --> SCHED1
-        NEWS_RAW --> SCHED1
-        SCHED1 --> STG_BTC
-        SCHED1 --> STG_NEWS
+    subgraph "RAW Schema"
+        RAW_CUST[customers]
+        RAW_SALES[online_sales]
+        RAW_MARKET[marketing_spend]
+        RAW_DISC[discount_coupon]
+        RAW_TAX[tax_amount]
     end
+
+    subgraph "DBT_SKAMRA_ANALYTICS Schema"
+        subgraph "Staging Layer"
+            STG_CUST[stg_customers]
+            STG_SALES[stg_online_sales]
+            STG_MARKET[stg_marketing_spend]
+            STG_DISC[stg_discount_coupon]
+            STG_TAX[stg_tax_amount]
+        end
+
+        subgraph "Dimensional Layer"
+            DIM_CUST[dim_customer]
+            DIM_PROD[dim_products]
+            DIM_DATE[dim_datetime]
+            FCT_SALES[fct_sales]
+        end
+    end
+
+    CSV --> RAW_CUST
+    CSV --> RAW_SALES
+    CSV --> RAW_MARKET
+    CSV --> RAW_DISC
+    CSV --> RAW_TAX
+
+    RAW_CUST --> STG_CUST
+    RAW_SALES --> STG_SALES
+    RAW_MARKET --> STG_MARKET
+    RAW_DISC --> STG_DISC
+    RAW_TAX --> STG_TAX
+
+    STG_CUST --> DIM_CUST
+    STG_SALES --> DIM_PROD
+    STG_SALES --> DIM_DATE
+
+    STG_CUST --> FCT_SALES
+    STG_SALES --> FCT_SALES
+    STG_MARKET --> FCT_SALES
+    STG_DISC --> FCT_SALES
+    STG_TAX --> FCT_SALES
+    DIM_CUST --> FCT_SALES
+    DIM_PROD --> FCT_SALES
+    DIM_DATE --> FCT_SALES
+```
+
+#### Real-Time Streaming Pipeline
+
+```mermaid
+graph LR
+    subgraph "External APIs"
+        API1[CoinGecko API<br/>Bitcoin Prices]
+        API2[NewsAPI<br/>Market News]
+    end
+
+    subgraph "Kafka Layer"
+        KAFKA[Kafka Cluster<br/>Topics: bitcoin-prices, news-events]
+    end
+
+    subgraph "STREAMING Schema"
+        BTC_RAW[bitcoin_prices_raw]
+        NEWS_RAW[news_events_raw]
+    end
+
+    SCHED1[dbt Cloud<br/>Hourly Scheduling]
+
+    subgraph "DBT_SKAMRA_STREAMING Schema"
+        STG_BTC[stg_bitcoin]
+        STG_NEWS[stg_news]
+    end
+
+    API1 --> KAFKA
+    API2 --> KAFKA
+    KAFKA --> BTC_RAW
+    KAFKA --> NEWS_RAW
+    BTC_RAW --> SCHED1
+    NEWS_RAW --> SCHED1
+    SCHED1 --> STG_BTC
+    SCHED1 --> STG_NEWS
 ```
 
 ### Data Processing Layers
