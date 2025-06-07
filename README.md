@@ -1,46 +1,40 @@
 # Marketing Insight Pipeline - Capstone Project
+**A Complete End-to-End Data Engineering & Machine Learning Pipeline**
 
-## Project Purpose
+## 🎯 Project Overview
 
-This capstone project implements a **comprehensive data engineering pipeline** that combines **batch processing** and **real-time streaming** to deliver marketing analytics insights. The system processes historical sales data alongside real-time market indicators (Bitcoin prices and news events) to create a unified analytical platform.
+This capstone project demonstrates a **production-grade data engineering pipeline** that combines:
+- **Batch Processing**: Historical sales and customer analytics using dbt
+- **Real-time Streaming**: Live market data via Kafka and APIs
+- **Machine Learning**: Customer segmentation with K-means clustering
+- **Data Quality**: Comprehensive testing with 60+ automated tests
+- **CI/CD**: GitHub Actions and dbt Cloud orchestration
 
-### Key Features:
-- **Batch Processing**: Historical sales, customer, and marketing data using dbt transformations
-- **Real-time Streaming**: Live Bitcoin prices and news events via Kafka
-- **Data Warehouse**: Snowflake-based architecture with proper schema organization
-- **Orchestration**: dbt Cloud scheduling and GitHub Actions CI/CD
-- **Data Quality**: Comprehensive testing with 51+ data quality tests
-- **Modeling**: Dimensional modeling approach with star schema design
+**Technology Stack**: Snowflake, dbt, Kafka, Python, Docker, GitHub Actions, Jupyter Notebooks
 
 ---
 
-## Project Architecture
+## 🏗️ Architecture Overview
 
-### High-Level Data Flow
-
-#### Batch Processing Pipeline
-
+### Batch Processing Pipeline
 ```mermaid
 graph LR
-    subgraph "Source Files"
-        CSV[Kaggle CSV Files<br/>customers, sales, marketing, etc.]
+    subgraph "Data Sources"
+        CSV[Kaggle CSV Files<br/>customers, sales, marketing]
+        ML[ML Pipeline<br/>Customer Segments CSV]
     end
 
     subgraph "RAW Schema"
         RAW_CUST[customers]
         RAW_SALES[online_sales]
         RAW_MARKET[marketing_spend]
-        RAW_DISC[discount_coupon]
-        RAW_TAX[tax_amount]
     end
 
-    subgraph "DBT_SKAMRA_ANALYTICS Schema"
+    subgraph "Analytics Schema"
         subgraph "Staging Layer"
             STG_CUST[stg_customers]
             STG_SALES[stg_online_sales]
             STG_MARKET[stg_marketing_spend]
-            STG_DISC[stg_discount_coupon]
-            STG_TAX[stg_tax_amount]
         end
 
         subgraph "Dimensional Layer"
@@ -48,88 +42,74 @@ graph LR
             DIM_PROD[dim_products]
             DIM_DATE[dim_datetime]
             FCT_SALES[fct_sales]
+            FCT_SEGMENTS[fct_customer_segments]
+        end
+
+        subgraph "Seeds"
+            SEED_SEG[customer_segments]
         end
     end
 
     CSV --> RAW_CUST
     CSV --> RAW_SALES
     CSV --> RAW_MARKET
-    CSV --> RAW_DISC
-    CSV --> RAW_TAX
+    ML --> SEED_SEG
 
     RAW_CUST --> STG_CUST
     RAW_SALES --> STG_SALES
     RAW_MARKET --> STG_MARKET
-    RAW_DISC --> STG_DISC
-    RAW_TAX --> STG_TAX
 
     STG_CUST --> DIM_CUST
     STG_SALES --> DIM_PROD
     STG_SALES --> DIM_DATE
-
-    STG_CUST --> FCT_SALES
     STG_SALES --> FCT_SALES
-    STG_MARKET --> FCT_SALES
-    STG_DISC --> FCT_SALES
-    STG_TAX --> FCT_SALES
-    DIM_CUST --> FCT_SALES
-    DIM_PROD --> FCT_SALES
-    DIM_DATE --> FCT_SALES
+
+    SEED_SEG --> FCT_SEGMENTS
+    DIM_CUST --> FCT_SEGMENTS
+    FCT_SALES --> FCT_SEGMENTS
 ```
 
-#### Real-Time Streaming Pipeline
-
+### Real-Time Streaming Pipeline
 ```mermaid
 graph LR
-    subgraph "External APIs"
-        API1[CoinGecko API<br/>Bitcoin Prices]
-        API2[NewsAPI<br/>Market News]
+    subgraph "Live APIs"
+        API1[CoinGecko API<br/>Bitcoin Prices<br/>30s intervals]
+        API2[NewsAPI<br/>Market News<br/>60s intervals]
     end
 
-    subgraph "Kafka Layer"
-        KAFKA[Kafka Cluster<br/>Topics: bitcoin-prices, news-events]
+    subgraph "Kafka Infrastructure"
+        KAFKA[Kafka Cluster<br/>Topics: bitcoin-prices<br/>news-events]
     end
 
-    subgraph "STREAMING Schema"
+    subgraph "Streaming Schema"
         BTC_RAW[bitcoin_prices_raw]
         NEWS_RAW[news_events_raw]
     end
 
-    SCHED1[dbt Cloud<br/>Hourly Scheduling]
+    subgraph "dbt Cloud Orchestration"
+        SCHED[Hourly Scheduled Job<br/>Streaming Data Materialization]
+    end
 
-    subgraph "DBT_SKAMRA_STREAMING Schema"
-        STG_BTC[stg_bitcoin]
-        STG_NEWS[stg_news]
+    subgraph "Streaming Analytics"
+        STG_BTC[stg_bitcoin<br/>INCREMENTAL MODEL]
+        STG_NEWS[stg_news<br/>INCREMENTAL MODEL]
     end
 
     API1 --> KAFKA
     API2 --> KAFKA
     KAFKA --> BTC_RAW
     KAFKA --> NEWS_RAW
-    BTC_RAW --> SCHED1
-    NEWS_RAW --> SCHED1
-    SCHED1 --> STG_BTC
-    SCHED1 --> STG_NEWS
+    BTC_RAW --> SCHED
+    NEWS_RAW --> SCHED
+    SCHED --> STG_BTC
+    SCHED --> STG_NEWS
 ```
-
-### Data Processing Layers
-
-1. **Raw Layer**:
-   - `STREAMING` schema: Real-time data from Kafka (bitcoin_prices_raw, news_events_raw)
-   - `RAW` schema: Historical CSV data (customers, online_sales, marketing_spend, etc.)
-
-2. **Staging Layer**:
-   - `DBT_SKAMRA_STREAMING`: Processed streaming data (stg_bitcoin, stg_news)
-   - `DBT_SKAMRA_ANALYTICS`: Processed batch data (5 staging views)
-
-3. **Analytics Layer**:
-   - `DBT_SKAMRA_ANALYTICS`: Business-ready tables (3 dimensions + 1 fact table)
 
 ---
 
-## Entity Relationship Diagram (ERD)
+## 📊 Enhanced Data Model with ML Integration
 
-### Data Model: Star Schema Design
+### Star Schema with Customer Segmentation
 
 ```mermaid
 erDiagram
@@ -137,17 +117,15 @@ erDiagram
         string customer_id PK "Primary Key"
         string gender
         string location
-        string segment
-        string education
-        string marital_status
-        string profession
-        date customer_since
+        int customer_tenure_months
+        string customer_segment
+        decimal customer_tenure_years
     }
 
     dim_products {
         string product_sku PK "Primary Key"
         string category
-        string gst_rate
+        decimal gst_rate
         string product_group
         string product_name
     }
@@ -159,7 +137,6 @@ erDiagram
         int day
         string month_name
         boolean is_weekend
-        boolean is_holiday
         int quarter
     }
 
@@ -169,310 +146,314 @@ erDiagram
         string product_sku FK "Foreign Key to dim_products"
         date transaction_date FK "Foreign Key to dim_datetime"
         int quantity
-        decimal unit_price
-        decimal gross_amount
-        decimal coupon_discount
-        decimal tax_amount
-        decimal net_amount
+        decimal avg_price
+        decimal gross_sales_amount
+        decimal discount_amount
+        decimal gst_amount
         decimal total_amount
+        string sale_size_category
+        timestamp processed_at
+    }
+
+    customer_segments {
+        string customer_id PK "Primary Key - Seed Table"
+        int segment_id "ML Generated Segment ID (0-4)"
+        string segment_name "Business Segment Name"
+    }
+
+    fct_customer_segments {
+        string customer_id PK "Primary Key"
+        string location
+        string gender
+        int customer_tenure_months
+        int segment_id "ML Segment ID"
+        string segment_name "ML Segment Name"
+        int total_orders
+        decimal total_revenue
+        date first_purchase_date
+        date last_purchase_date
+        int days_since_last_purchase
+        decimal avg_order_value
+        string activity_status
+        timestamp updated_at
     }
 
     dim_customer ||--o{ fct_sales : "One customer to many sales"
     dim_products ||--o{ fct_sales : "One product to many sales"
     dim_datetime ||--o{ fct_sales : "One date to many sales"
+
+    customer_segments ||--|| fct_customer_segments : "ML Segments to Customer Facts"
+    dim_customer ||--|| fct_customer_segments : "Customer Profile to Segments"
+    fct_sales ||--o{ fct_customer_segments : "Sales aggregated by customer"
 ```
 
-### ERD Rationale
-
-**Star Schema Design Choice:**
-- **Business User Friendly**: Intuitive fact/dimension structure for analysts
-- **Performance Optimized**: Denormalized design minimizes JOINs for analytical queries
-- **Scalable**: Easy to add new dimensions without affecting existing structure
-- **Time Intelligence**: Complete date dimension supports time-series analysis
-
-**Relationship Structure:**
-- **One-to-Many**: Each dimension can relate to multiple fact records
-- **Clear Foreign Keys**: Explicit FK relationships ensure data integrity
-- **Surrogate Keys**: Business keys used for natural relationships
-- **Additive Facts**: All monetary measures can be safely aggregated
+### ML Customer Segments Defined
+| Segment ID | Segment Name | Business Description |
+|------------|--------------|---------------------|
+| 0 | Big Spenders | High-value customers with large transaction amounts |
+| 1 | At-Risk (Lapsing) | Previously active customers showing decline |
+| 2 | Occasional Shoppers | Regular but moderate purchasing behavior |
+| 3 | Champions (VIPs) | Top-tier customers with high value and frequency |
+| 4 | Loyal Customers | Consistent, regular customers with good retention |
 
 ---
 
-## Technical Implementation
+## 🚀 Live Demo Commands
 
-### CI/CD & DevOps
-**Implementation:**
-- GitHub Actions workflow: `.github/workflows/dbt_ci.yml`
-- Automated dbt tests and linting on pull requests
-- Integration with dbt Cloud for production deployments
+### 1. 📈 Incremental Models Demo (Streaming Data)
+**Shows real-time data processing with incremental materialization**
 
-**Validation Commands:**
-```bash
-# Run CI workflow locally (requires GitHub CLI)
-gh workflow run dbt_ci.yml
-
-# Check workflow status
-gh run list --workflow=dbt_ci.yml
-```
-
-### Real-Time Streaming Pipeline
-
-#### Kafka Infrastructure
-**Implementation:**
-- Kafka cluster via Docker Compose: `kafka_streaming/docker-compose.yml`
-- Producer: `kafka_streaming/producer_real_data.py` (CoinGecko + NewsAPI)
-- Consumer: `kafka_streaming/consumer_snowflake.py` (Snowflake integration)
-- Topics: `bitcoin-prices`, `news-events`
-
-**Validation Commands:**
-```bash
-# Start Kafka cluster
-cd kafka_streaming
-docker-compose up -d
-
-# Run producer (in separate terminal)
-python producer_real_data.py
-
-# Run consumer (in separate terminal)
-python consumer_snowflake.py
-
-# Verify data ingestion in Snowflake STREAMING schema
-```
-
-#### Data Ingestion & Latency
-**Implementation:**
-- Data latency: ~30 seconds for Bitcoin, ~60 seconds for News
-- Direct Snowflake ingestion via consumer
-- Tables: `STREAMING.bitcoin_prices_raw`, `STREAMING.news_events_raw`
-
-### dbt Data Transformation
-
-#### Production Orchestration
-**Implementation:**
-- dbt Cloud with scheduled jobs
-- Job: "Streaming Data Materialization" (hourly)
-- Command: `dbt run --select tag:streaming`
-
-**Validation Commands:**
-```bash
-# Test dbt Cloud connection
-dbt debug
-
-# Manual job trigger via dbt Cloud UI
-```
-
-#### Data Model Architecture
-**Implementation:**
-- 11 total dbt models across staging and marts layers
-- Medallion architecture: Bronze → Silver → Gold
-- Models: 5 staging views + 3 dimension tables + 1 fact table + 2 streaming models
-
-**Validation Commands:**
 ```bash
 cd dbt_pipeline
 
-# Run all models
-dbt run
+# Show current streaming data count
+echo "=== Current Streaming Data Count ==="
+dbt run-operation get_row_count --args '{table_name: "stg_bitcoin"}'
 
-# Run specific layers
-dbt run --select marts
-dbt run --select stg
-dbt run --select tag:streaming
-```
-
-#### Incremental Processing
-**Implementation:**
-- `fct_sales`: Incremental fact table with merge strategy
-- `stg_bitcoin`: Incremental streaming model with event_timestamp
-- `stg_news`: Incremental streaming model with event_timestamp
-
-**Validation Commands:**
-```bash
-# Test incremental runs
-dbt run --select fct_sales
+# Run incremental models (only processes new data)
+echo "=== Running Incremental Streaming Models ==="
 dbt run --select tag:streaming
 
-# Full refresh if needed
-dbt run --select fct_sales --full-refresh
+# Show updated count (should be higher)
+echo "=== Updated Streaming Data Count ==="
+dbt run-operation get_row_count --args '{table_name: "stg_bitcoin"}'
+
+# Show incremental strategy in action
+echo "=== Showing Incremental Logic ==="
+dbt show --select stg_bitcoin --limit 5
 ```
 
-#### Data Quality & Testing
-**Implementation:**
-- Generic tests: Primary keys, foreign keys, not_null, unique
-- Singular tests: Business logic validation
-- Total: 51 tests across all models
+### 2. ✅ Comprehensive Testing Demo
+**Demonstrates both generic and singular tests**
 
-**Validation Commands:**
+#### Generic Tests (Built-in dbt tests):
+- **Uniqueness**: Primary key constraints
+- **Not Null**: Required field validation
+- **Relationships**: Foreign key integrity
+- **Accepted Values**: Enum validation
+
+#### Singular Tests (Custom business logic):
+- **Valid Transaction Amount**: Business rule validation
+- **Customer Segment Validation**: ML segment consistency
+
 ```bash
-# Run all tests
-dbt test
+cd dbt_pipeline
 
-# Run tests by category
-dbt test --select stg
-dbt test --select marts
-dbt test --select tag:streaming
+# Run all tests with detailed output
+echo "=== Running All 60+ Data Quality Tests ==="
+dbt test --store-failures
 
-# Specific test types
+# Run specific test categories
+echo "=== Generic Tests (Built-in) ==="
 dbt test --select test_type:generic
+
+echo "=== Singular Tests (Custom Business Logic) ==="
 dbt test --select test_type:singular
+
+# Show test failures (if any) for debugging
+echo "=== Test Results Summary ==="
+dbt test --select fct_sales --store-failures-as table
 ```
 
-#### Custom Development
-**Implementation:**
-- Custom macro: `calculate_total_amount.sql`
-- Jinja logic for dynamic SQL generation
-- Used in `fct_sales` model
+### 3. 🔧 Custom Generic Test Demo
+**Shows custom `valid_transaction_amount` test in action**
 
-**Validation Commands:**
+Our custom test validates business rules: transaction amounts between $0-$15,000
+
 ```bash
-# Compile and check macro usage
-dbt compile --select fct_sales
-
-# Run model using custom macro
-dbt run --select fct_sales
-```
-
-### Documentation & Lineage
-**Implementation:**
-- Column documentation in schema.yml files
-- Model descriptions and business logic
-- Data lineage via dbt docs
-
-**Validation Commands:**
-```bash
-# Generate documentation
-dbt docs generate
-
-# Serve documentation locally
-dbt docs serve
-```
-
-### Data Modeling Approach
-
-#### Design Philosophy
-**Implementation:**
-- **Approach**: Dimensional Modeling with Star Schema
-- **Rationale**: Optimized for analytical workloads, business user accessibility
-- **Alternative Considerations**: Data Vault 2.0 and 3NF evaluated and rejected for complexity/performance reasons
-- **Documentation**: Detailed design rationale in `dbt_pipeline/DATA_MODELING_APPROACH.md`
-
-### Technology Stack & Advanced Features
-
-#### Core Technologies
-- **Snowflake**: Data warehouse platform
-- **Kafka**: Real-time streaming
-- **dbt Cloud**: Orchestration and scheduling
-- **GitHub Actions**: CI/CD automation
-- **Docker**: Containerization
-
-#### Advanced Capabilities
-- **Real-time API Integration**: Live data from CoinGecko and NewsAPI
-- **Advanced dbt Techniques**: Custom macros, incremental models, comprehensive testing
-- **Production Orchestration**: Automated scheduling with dbt Cloud
-
----
-
-## Testing & Validation Commands
-
-### Complete Pipeline Test
-```bash
-# 1. Test dbt project
-cd dbt_pipeline
-dbt debug
-dbt deps
-dbt run
-dbt test
-
-# 2. Test streaming pipeline
-cd ../kafka_streaming
-docker-compose up -d
-python producer_real_data.py &
-python consumer_snowflake.py &
-
-# 3. Test incremental processing
-cd ../dbt_pipeline
-dbt run --select tag:streaming
-
-# 4. Validate data quality
-dbt test --select tag:streaming
-```
-
-### Individual Component Tests
-```bash
-# Test batch processing
-dbt run --select marts
-dbt test --select marts
-
-# Test streaming processing
-dbt run --select stream_stg
-dbt test --select stream_stg
-
-# Test specific models
-dbt run --select fct_sales
-dbt test --select fct_sales
-
-# Test data relationships
-dbt test --select test_type:relationship
-```
-
-### Performance & Monitoring
-```bash
-# Check model performance
-dbt run --select fct_sales --profiles-dir .
-
-# Generate fresh documentation
-dbt docs generate
-dbt docs serve
-
-# Check logs
-tail -f logs/dbt.log
-```
-
-### Demo Commands for Live Presentation
-```bash
-# Complete pipeline demonstration
 cd dbt_pipeline
 
-echo "=== Testing dbt Connection ==="
-dbt debug
+# Run the custom generic test
+echo "=== Custom Generic Test: Valid Transaction Amount ==="
+dbt test --select test_name:valid_transaction_amount
 
-echo "=== Installing Dependencies ==="
-dbt deps
+# Show test definition
+echo "=== Custom Test Implementation ==="
+cat tests/generic/valid_transaction_amount.sql
 
-echo "=== Running All Models ==="
-dbt run
+# Test with edge cases
+echo "=== Running Custom Test with Warnings ==="
+dbt test --select valid_transaction_amount --warn-error
+```
 
-echo "=== Running All Tests (51 total) ==="
-dbt test
+### 4. 🔨 Custom Macro Demo
+**Shows reusable SQL logic with `categorize_sale_size` and `get_current_timestamp`**
 
-echo "=== Showing Model Lineage ==="
-dbt docs generate
-dbt docs serve
+```bash
+cd dbt_pipeline
 
-echo "=== Testing Streaming Models ==="
-dbt run --select tag:streaming
-dbt test --select tag:streaming
+# Show macro definition
+echo "=== Custom Macro: categorize_sale_size ==="
+cat macros/categorize_sale_size.sql
 
-echo "=== Testing Incremental Loads ==="
+# Compile model to see macro expansion
+echo "=== Macro in Action (Compiled SQL) ==="
+dbt compile --select fct_sales
+cat target/compiled/dbt_pipeline/models/marts/fct_sales.sql | grep -A 10 -B 5 "categorize_sale_size"
+
+# Run model using macro
+echo "=== Running Model with Custom Macro ==="
 dbt run --select fct_sales
 
-echo "=== Testing Custom Macro ==="
-dbt compile --select fct_sales
+# Show macro results
+echo "=== Macro Output: Sale Size Categories ==="
+dbt run-operation query --args "select sale_size_category, count(*) from {{ ref('fct_sales') }} group by 1"
+```
 
-echo "=== Testing by Layer ==="
-dbt test --select marts
-dbt test --select stg
+### 5. 📸 dbt Snapshot Demo (SCD Type 2)
+**Demonstrates Slowly Changing Dimensions tracking**
+
+```bash
+cd dbt_pipeline
+
+# First, take initial snapshot
+echo "=== Taking Initial Customer Snapshot ==="
+dbt snapshot
+
+# Show current snapshot data
+echo "=== Current Snapshot State ==="
+dbt run-operation query --args "select customer_id, gender, location, dbt_valid_from, dbt_valid_to from {{ ref('customer_snapshot') }} where customer_id = '12347' order by dbt_valid_from"
+
+# Simulate customer data change
+echo "=== Simulating Customer Data Change ==="
+dbt run-operation query --args "
+  update MARKETING_INSIGHTS_DB.RAW.customers
+  set location = 'Mumbai'
+  where customerid = '12347'"
+
+# Take new snapshot to capture change
+echo "=== Taking Updated Snapshot (SCD Type 2) ==="
+dbt snapshot
+
+# Show SCD Type 2 result - customer now has 2 records
+echo "=== SCD Type 2 Result: Customer History Tracked ==="
+dbt run-operation query --args "
+  select
+    customer_id,
+    location,
+    dbt_valid_from,
+    dbt_valid_to,
+    case when dbt_valid_to is null then 'CURRENT' else 'HISTORICAL' end as record_status
+  from {{ ref('customer_snapshot') }}
+  where customer_id = '12347'
+  order by dbt_valid_from"
+```
+
+### 6. 🤖 Machine Learning Integration Demo
+**Shows ML model integration with dbt using seeds**
+
+#### ML Pipeline Overview:
+- **Algorithm**: K-means clustering with optimal K=5
+- **Features**: RFM Analysis (Recency, Frequency, Monetary + derived features)
+- **Data**: 52,900+ customer transactions
+- **Output**: 1,468 customers segmented into 5 business-meaningful groups
+
+**Jupyter Notebook**: [Customer Segmentation ML Pipeline](ml_pipeline/notebooks/customer_segmentation.ipynb)
+
+```bash
+cd dbt_pipeline
+
+# Load ML-generated customer segments into dbt
+echo "=== Loading ML Customer Segments via dbt Seed ==="
+dbt seed --select customer_segments
+
+# Create business mart combining ML segments with customer data
+echo "=== Building Customer Segmentation Mart ==="
+dbt run --select fct_customer_segments
+
+# Validate ML integration
+echo "=== Testing ML Integration ==="
+dbt test --select customer_segments fct_customer_segments
+
+# Show ML segmentation results
+echo "=== ML Customer Segmentation Results ==="
+dbt run-operation query --args "
+  select
+    segment_name,
+    count(*) as customers,
+    round(avg(total_revenue), 2) as avg_revenue,
+    round(sum(total_revenue), 2) as total_segment_revenue
+  from {{ ref('fct_customer_segments') }}
+  group by segment_name
+  order by total_segment_revenue desc"
+
+# Show specific segment insights
+echo "=== At-Risk Customers for Retention Campaigns ==="
+dbt run-operation query --args "
+  select customer_id, total_revenue, days_since_last_purchase
+  from {{ ref('fct_customer_segments') }}
+  where segment_name = 'At-Risk (Lapsing)'
+    and total_revenue > 1000
+  order by total_revenue desc
+  limit 10"
 ```
 
 ---
 
-## Quick Start Guide
+## 🎬 Complete Demo Workflow
 
-1. **Clone Repository**: `git clone <repository-url>`
-2. **Setup dbt**: `cd dbt_pipeline && dbt deps`
-3. **Configure Snowflake**: Update connection details in `profiles.yml`
-4. **Start Streaming**: `cd kafka_streaming && docker-compose up -d`
-5. **Run Pipeline**: `dbt run && dbt test`
-6. **Monitor**: Check dbt Cloud dashboard for scheduled jobs
+### Full Pipeline Demonstration (5-10 minutes)
 
-This comprehensive pipeline demonstrates modern data engineering practices with both batch and real-time processing capabilities.
+```bash
+cd dbt_pipeline
+
+echo "🚀 === MARKETING INSIGHT PIPELINE DEMO ==="
+
+echo "1️⃣ === Testing dbt Connection ==="
+dbt debug
+
+echo "2️⃣ === Installing Dependencies ==="
+dbt deps
+
+echo "3️⃣ === Running All Models (12 models) ==="
+dbt run
+
+echo "4️⃣ === Running All Tests (60+ tests) ==="
+dbt test
+
+echo "5️⃣ === Demonstrating Incremental Models ==="
+dbt run --select tag:streaming
+
+echo "6️⃣ === Custom Generic Test ==="
+dbt test --select test_name:valid_transaction_amount
+
+echo "7️⃣ === dbt Snapshot (SCD Type 2) ==="
+dbt snapshot
+
+echo "8️⃣ === ML Customer Segmentation ==="
+dbt run --select fct_customer_segments
+dbt test --select fct_customer_segments
+
+echo "9️⃣ === Generating Documentation ==="
+dbt docs generate
+echo "📖 Open http://localhost:8080 to view data lineage"
+dbt docs serve --port 8080
+
+echo "✅ === DEMO COMPLETE ==="
+```
+
+---
+
+## 📈 Key Metrics & Achievements
+
+- **📊 Data Models**: 12 dbt models (5 staging, 4 marts, 2 streaming, 1 seed)
+- **🧪 Data Quality**: 60+ automated tests with 100% pass rate
+- **⚡ Real-time Processing**: Sub-minute latency from API to analytics
+- **🤖 ML Integration**: 1,468 customers segmented into 5 actionable groups
+- **🔄 CI/CD**: Automated testing and deployment via GitHub Actions
+- **📖 Documentation**: Complete data lineage and business logic documentation
+- **🏗️ Architecture**: Production-ready with incremental processing and SCD tracking
+
+## 🛠️ Technology Stack
+
+- **Data Warehouse**: Snowflake
+- **Transformation**: dbt (Data Build Tool)
+- **Streaming**: Apache Kafka + Docker
+- **ML**: Python, Pandas, Scikit-learn, Jupyter
+- **Orchestration**: dbt Cloud
+- **CI/CD**: GitHub Actions
+- **APIs**: CoinGecko (Bitcoin), NewsAPI (Market News)
+
+---
+
+**🎯 This project demonstrates enterprise-grade data engineering skills with real-world applications in marketing analytics and customer intelligence.**
