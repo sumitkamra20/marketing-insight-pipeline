@@ -45,7 +45,7 @@ models:
               to: ref('dim_products')
               field: product_sku
       - name: total_amount
-        description: "Final transaction amount"
+        description: "Final transaction amount using custom macro"
         tests:
           - valid_transaction_amount:
               min_amount: 0

@@ -1,0 +1,29 @@
+# AI Agent Environment Variables Template
+# Copy these variables to your environment or .env file
+
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Snowflake Configuration
+SNOWFLAKE_USER=your_snowflake_username
+SNOWFLAKE_PASSWORD=your_snowflake_password
+SNOWFLAKE_ACCOUNT=your_account.region
+SNOWFLAKE_WAREHOUSE=your_warehouse_name
+SNOWFLAKE_DATABASE=your_database_name
+SNOWFLAKE_SCHEMA=marts
+SNOWFLAKE_ROLE=your_role_name
+
+# Agent Configuration
+DEFAULT_LLM_MODEL=gpt-4-turbo-preview
+LOG_LEVEL=INFO
+
+# Vector Database Configuration (for RAG - to be implemented)
+# CHROMA_DB_PATH=./data/chroma_db
+# EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+
+# Usage:
+# 1. Copy these variables to a .env file in the ai_agent directory
+# 2. Or export them in your shell:
+#    export OPENAI_API_KEY="your_key"
+#    export SNOWFLAKE_USER="your_username"
+#    etc.

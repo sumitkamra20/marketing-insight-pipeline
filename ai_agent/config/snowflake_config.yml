@@ -1,0 +1,30 @@
+# Snowflake Configuration for AI Agent
+# Copy this file and update with your actual credentials
+
+snowflake:
+  # Connection parameters
+  user: "${SNOWFLAKE_USER}"              # Your Snowflake username
+  password: "${SNOWFLAKE_PASSWORD}"       # Your Snowflake password
+  account: "${SNOWFLAKE_ACCOUNT}"         # Your Snowflake account identifier
+  warehouse: "${SNOWFLAKE_WAREHOUSE}"     # Warehouse name
+  database: "${SNOWFLAKE_DATABASE}"       # Database name
+  schema: "${SNOWFLAKE_SCHEMA}"          # Schema name (e.g., 'marts' for dbt models)
+  role: "${SNOWFLAKE_ROLE}"              # Role (default: PUBLIC)
+
+# Environment variables to set:
+# export SNOWFLAKE_USER="your_username"
+# export SNOWFLAKE_PASSWORD="your_password"
+# export SNOWFLAKE_ACCOUNT="your_account.region"
+# export SNOWFLAKE_WAREHOUSE="your_warehouse"
+# export SNOWFLAKE_DATABASE="your_database"
+# export SNOWFLAKE_SCHEMA="marts"
+# export SNOWFLAKE_ROLE="your_role"
+
+# Example values (replace with your actual values):
+# user: "john_doe"
+# password: "secure_password123"
+# account: "xy12345.us-east-1"
+# warehouse: "COMPUTE_WH"
+# database: "MARKETING_PIPELINE"
+# schema: "MARTS"
+# role: "ANALYST_ROLE"
