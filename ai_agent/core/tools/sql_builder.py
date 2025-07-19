@@ -7,6 +7,29 @@ from typing import Optional, List, Dict, Any
 from ..semantic_model import SEMANTIC_MODELS, fct_sales_semantic
 
 
+def resolve_alias(term: str, semantic_model: Dict, term_type: str) -> str:
+    """
+    Resolve aliases for metrics or dimensions
+
+    Args:
+        term: The term to resolve
+        semantic_model: Semantic model dictionary
+        term_type: Either 'metric' or 'dimension'
+
+    Returns:
+        Resolved term or original if no alias found
+    """
+    aliases = semantic_model.get("aliases", {})
+    if term in aliases:
+        resolved = aliases[term]
+        # Check if the resolved term exists in the appropriate section
+        if term_type == "metric" and resolved in semantic_model.get("metrics", {}):
+            return resolved
+        elif term_type == "dimension" and resolved in semantic_model.get("dimensions", {}):
+            return resolved
+    return term
+
+
 def build_sales_query(
     metric: str,
     group_by: Optional[str] = None,
@@ -32,16 +55,26 @@ def build_sales_query(
     semantic_model = fct_sales_semantic
     table = semantic_model["table"]
 
+    # Resolve aliases
+    metric = resolve_alias(metric, semantic_model, "metric")
+    if group_by:
+        group_by = resolve_alias(group_by, semantic_model, "dimension")
+
     # Get metric expression
     metric_expr = semantic_model["metrics"].get(metric)
     if not metric_expr:
         available_metrics = list(semantic_model["metrics"].keys())
-        return f"Error: Metric '{metric}' not supported. Available metrics: {available_metrics}"
+        available_aliases = [k for k, v in semantic_model.get("aliases", {}).items()]
+        return f"Error: Metric '{metric}' not supported. Available metrics: {available_metrics}. Available aliases: {available_aliases}"
 
     # Get group by expression
     group_expr = None
     if group_by:
         group_expr = semantic_model["dimensions"].get(group_by, group_by)
+        # Validate that the dimension exists
+        if group_by not in semantic_model["dimensions"]:
+            available_dimensions = list(semantic_model["dimensions"].keys())
+            return f"Error: Dimension '{group_by}' not available in {table}. Available dimensions: {available_dimensions}"
 
     # Build SELECT clause
     select_parts = []
@@ -122,16 +155,26 @@ def build_generic_query(
     semantic_model = SEMANTIC_MODELS[table_name]
     table = semantic_model["table"]
 
+    # Resolve aliases
+    metric = resolve_alias(metric, semantic_model, "metric")
+    if group_by:
+        group_by = resolve_alias(group_by, semantic_model, "dimension")
+
     # Get metric expression
     metric_expr = semantic_model["metrics"].get(metric)
     if not metric_expr:
         available_metrics = list(semantic_model["metrics"].keys())
-        return f"Error: Metric '{metric}' not supported for {table_name}. Available metrics: {available_metrics}"
+        available_aliases = [k for k, v in semantic_model.get("aliases", {}).items()]
+        return f"Error: Metric '{metric}' not supported for {table_name}. Available metrics: {available_metrics}. Available aliases: {available_aliases}"
 
     # Get group by expression
     group_expr = None
     if group_by:
         group_expr = semantic_model["dimensions"].get(group_by, group_by)
+        # Validate that the dimension exists
+        if group_by not in semantic_model["dimensions"]:
+            available_dimensions = list(semantic_model["dimensions"].keys())
+            return f"Error: Dimension '{group_by}' not available in {table_name}. Available dimensions: {available_dimensions}"
 
     # Build SELECT clause
     select_parts = []

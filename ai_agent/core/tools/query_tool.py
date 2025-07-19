@@ -197,7 +197,7 @@ def get_table_schema_info(table_name: str) -> str:
         dimensions = get_available_dimensions(table_name)
 
         if not metrics and not dimensions:
-            return f"Table '{table_name}' not found in semantic models. Available tables: fct_sales, fct_customer_segments, dim_products"
+            return f"Table '{table_name}' not found in semantic models. Available tables: fct_sales, fct_customer_segments, dim_products, stg_bitcoin"
 
         schema_info = f"Schema information for {table_name}:\n\n"
         schema_info += f"Available Metrics:\n{chr(10).join(f'- {metric}' for metric in metrics)}\n\n"
@@ -230,10 +230,36 @@ def test_snowflake_connection() -> str:
         return f"Connection test error: {str(e)}"
 
 
+@tool
+def get_available_aliases() -> str:
+    """
+    Get information about available aliases across all tables.
+
+    Returns:
+        String containing all available aliases and what they map to
+    """
+    from ..semantic_model import SEMANTIC_MODELS
+
+    alias_info = []
+
+    for table_name, model in SEMANTIC_MODELS.items():
+        aliases = model.get("aliases", {})
+        if aliases:
+            alias_info.append(f"\n{table_name}:")
+            for alias, actual in aliases.items():
+                alias_info.append(f"  '{alias}' → '{actual}'")
+
+    if alias_info:
+        return "Available aliases:\n" + "\n".join(alias_info)
+    else:
+        return "No aliases defined in semantic models."
+
+
 # Export all tools for easy import
 __all__ = [
     'run_sales_query',
     'run_generic_query',
     'get_table_schema_info',
-    'test_snowflake_connection'
+    'test_snowflake_connection',
+    'get_available_aliases'
 ]

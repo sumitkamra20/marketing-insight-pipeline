@@ -94,11 +94,10 @@ class DataExtractionAgent:
             system_message = AIMessage(content="""I am a data analysis assistant for the Marketing Insight Pipeline.
             I can help you query and analyze data from the following tables:
 
-            - fct_sales: Sales transaction data with metrics like total sales, quantities, discounts
+                        - fct_sales: Sales transaction data with metrics like total sales, quantities, discounts
             - fct_customer_segments: Customer segmentation data with ML-driven insights
             - dim_products: Product dimension data with categories and tax information
             - stg_bitcoin: Bitcoin price streaming data
-            - stg_news: News data from streaming sources
 
             I can answer questions like:
             - "What are the total sales for last month?"
@@ -171,7 +170,7 @@ class DataExtractionAgent:
         """
         Get information about available tables and their schemas
         """
-        tables = ["fct_sales", "fct_customer_segments", "dim_products"]
+        tables = ["fct_sales", "fct_customer_segments", "dim_products", "stg_bitcoin"]
         schema_info = []
 
         for table in tables:
