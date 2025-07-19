@@ -35,11 +35,11 @@ def main():
         print("   Please check your Snowflake configuration and try again.\n")
         return
 
-    # Create the agent
-    print("2. Initializing Data Extraction Agent...")
+    # Create the agent with memory enabled
+    print("2. Initializing Data Extraction Agent (with memory)...")
     try:
-        agent = create_data_extraction_agent()
-        print("   Agent initialized successfully!\n")
+        agent = create_data_extraction_agent(enable_memory=True)
+        print("   Agent initialized successfully with SQLite memory!\n")
     except Exception as e:
         print(f"   Agent initialization failed: {e}")
         print("   Please check your OpenAI API key and try again.\n")
@@ -54,12 +54,44 @@ def main():
         "How many unique customers do we have in each segment?"
     ]
 
-    print("3. Example Queries:")
+    # Demonstrate memory functionality first
+    print("3. Memory Demonstration:")
+    import uuid
+    session_id = str(uuid.uuid4())
+
+    print(f"\n--- Memory Test (Session: {session_id[:8]}...) ---")
+    print("Establishing context...")
+    memory_query1 = "Hi, I'm Sarah from the marketing team and I'm analyzing Q4 performance."
+    print(f"User: {memory_query1}")
+    try:
+        response1 = agent.process_query(memory_query1, session_id=session_id)
+        print(f"Agent: {response1}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+    print(f"\nTesting memory recall...")
+    memory_query2 = "What's my name and what am I working on?"
+    print(f"User: {memory_query2}")
+    try:
+        response2 = agent.process_query(memory_query2, session_id=session_id)
+        print(f"Agent: {response2}")
+
+        if "Sarah" in response2:
+            print("✅ Memory working - agent remembered the name!")
+        else:
+            print("⚠️  Memory may not be working as expected")
+    except Exception as e:
+        print(f"Error: {e}")
+
+    input("\nPress Enter to continue to data queries...")
+
+    print("\n4. Data Query Examples:")
 
     for i, query in enumerate(example_queries, 1):
         print(f"\n--- Query {i}: {query} ---")
         try:
-            response = agent.process_query(query)
+            # Use the same session to maintain conversation context
+            response = agent.process_query(query, session_id=session_id)
             print(f"Response: {response}")
         except Exception as e:
             print(f"Error processing query: {e}")
@@ -69,7 +101,12 @@ def main():
             input("\nPress Enter to continue to the next query...")
 
     print("\n=== Demo Complete ===")
-    print("You can now use the agent interactively or integrate it into your applications!")
+    print("Key features demonstrated:")
+    print("• SQLite-based session memory (isolated per session)")
+    print("• Context persistence within the same session")
+    print("• Data extraction and analysis capabilities")
+    print("• Session isolation (new sessions = fresh memory)")
+    print("\nYou can now use the agent interactively or integrate it into your applications!")
 
 
 def interactive_mode():
@@ -84,8 +121,15 @@ def interactive_mode():
     print("Type 'quit' to exit, 'help' for available commands\n")
 
     try:
-        agent = create_data_extraction_agent()
-        print("Agent ready! Ask me anything about your marketing data.\n")
+        agent = create_data_extraction_agent(enable_memory=True)
+        print("Agent ready with memory! Ask me anything about your marketing data.")
+        print("Your conversation will be remembered within this session.\n")
+
+        # Generate unique session ID for this interactive session
+        import uuid
+        session_id = str(uuid.uuid4())
+        print(f"Session ID: {session_id[:8]}...\n")
+
     except Exception as e:
         print(f"Failed to initialize agent: {e}")
         return
@@ -111,7 +155,8 @@ def interactive_mode():
                 continue
 
             print("\nAgent: ", end="")
-            response = agent.process_query(user_input)
+            # Use consistent session_id for the interactive session
+            response = agent.process_query(user_input, session_id=session_id)
             print(f"{response}\n")
 
         except KeyboardInterrupt:
