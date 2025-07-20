@@ -1,0 +1,89 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+!ai_agent/chatbot/README.md
+
+# Logs
+*.log
+logs/
+dbt_pipeline/logs/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Node modules (if any)
+node_modules/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Data directories not needed in container
+data/
+ml_pipeline/models/*.pkl
+ml_pipeline/models/*.csv
+ai_agent/data/
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Large files
+*.zip
+*.tar.gz
+*.rar
+
+# dbt specific
+dbt_pipeline/target/
+dbt_pipeline/dbt_packages/
+
+# Kafka/streaming (not needed for chatbot)
+kafka_streaming/
+
+# Data ingestion (not needed for chatbot)
+data_ingestion/
+
+# ML pipeline (not needed for chatbot)
+ml_pipeline/
+
+# Keep only ai_agent for deployment
+!ai_agent/

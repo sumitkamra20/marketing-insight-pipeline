@@ -26,12 +26,12 @@ from rag.config import get_config, validate_config, create_env_template
 # Load environment variables
 load_dotenv()
 
-# Page configuration
+    # Page configuration
 st.set_page_config(
-    page_title="Marketing Insight Chatbot",
-    page_icon="🤖",
+    page_title="Marketing Insight Explorer",
+    page_icon="🔍",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"  # Let Streamlit decide based on screen size
 )
 
 # Custom CSS for better styling
@@ -39,11 +39,23 @@ st.markdown("""
 <style>
     .main-header {
         text-align: center;
-        padding: 1rem 0;
+        padding: 0.5rem 0;
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
         color: white;
-        border-radius: 10px;
-        margin-bottom: 2rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .main-title {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 0;
+        line-height: 1.2;
+    }
+    .developer-credit {
+        font-size: 1rem;
+        margin-top: 0.2rem;
+        opacity: 0.9;
+        font-weight: 500;
     }
     .chat-message {
         padding: 1rem;
@@ -60,9 +72,50 @@ st.markdown("""
         border-left-color: #26a69a;
     }
     .mode-selector {
+        margin-bottom: 1rem;
+    }
+    .service-status {
+        margin-top: 2rem;
+        padding: 0.5rem;
         background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 10px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+    }
+    /* Compact suggested queries styling */
+    .stButton button {
+        font-size: 0.65rem !important;
+        padding: 0.25rem 0.4rem !important;
+        height: auto !important;
+        min-height: 1.8rem !important;
+        line-height: 1.1 !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+    }
+    /* Mobile optimization */
+    @media (max-width: 768px) {
+        .main-title {
+            font-size: 1.5rem;
+        }
+        .developer-credit {
+            font-size: 0.9rem;
+        }
+        /* Hide sidebar by default on mobile */
+        .css-1d391kg {
+            transform: translateX(-100%);
+        }
+        /* Overlay for mobile sidebar */
+        .css-1d391kg.css-1aumxhk {
+            transform: translateX(0);
+            position: fixed;
+            z-index: 999;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+    }
+    .explore-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
         margin-bottom: 1rem;
     }
 </style>
@@ -85,11 +138,23 @@ def initialize_data_agent():
 def initialize_rag_service():
     """Initialize RAG service with caching."""
     try:
+        # Check for required environment variables first
+        required_env_vars = ["OPENAI_API_KEY", "PINECONE_API_KEY"]
+        missing_vars = []
+
+        for var in required_env_vars:
+            if not os.getenv(var):
+                missing_vars.append(var)
+
+        if missing_vars:
+            return None, f"Missing required environment variables: {', '.join(missing_vars)}"
+
         # Validate RAG configuration
         validate_config()
         config = get_config()
 
-        # Create RAG service
+        # Create RAG service with enhanced error reporting
+        print(f"🔧 Initializing RAG service with index: {config.pinecone_index_name}")
         service = create_rag_service(
             pinecone_api_key=config.pinecone_api_key,
             openai_api_key=config.openai_api_key,
@@ -98,9 +163,14 @@ def initialize_rag_service():
             chunk_overlap=config.chunk_overlap,
             retrieval_k=config.retrieval_k
         )
+        print("✅ RAG service initialized successfully")
         return service, None
+    except ImportError as e:
+        return None, f"Missing dependencies for RAG service: {str(e)}. Please install: pip install pinecone langchain-pinecone PyPDF2"
     except Exception as e:
-        return None, f"Failed to initialize RAG service: {str(e)}"
+        error_msg = f"Failed to initialize RAG service: {str(e)}"
+        print(f"❌ RAG initialization error: {error_msg}")
+        return None, error_msg
 
 def display_setup_instructions():
     """Display setup instructions for missing configuration."""
@@ -123,10 +193,20 @@ def display_setup_instructions():
         ### For Document Processing (RAG):
         - `OPENAI_API_KEY` (same as above)
         - `PINECONE_API_KEY`
-        - `PINECONE_ENV`
-        - `PINECONE_INDEX_NAME` (optional)
+        - `PINECONE_INDEX_NAME` (optional, defaults to 'rag-index')
 
-        Create a `.env` file in your project root with these variables.
+        ### Deployment Notes:
+        - **Local Development**: Create a `.env` file in your project root with these variables
+        - **Cloud Deployment**: Set these as environment variables in your deployment platform
+        - **Docker**: Pass environment variables using `-e` flags or docker-compose.yml
+        - **Streamlit Cloud**: Add variables in the "Secrets" section of your app settings
+
+        ### Troubleshooting Document Processing:
+        If document processing works locally but not in deployment:
+        1. ✅ Verify `OPENAI_API_KEY` and `PINECONE_API_KEY` are set
+        2. ✅ Check network connectivity to external APIs
+        3. ✅ Ensure all dependencies are installed: `pinecone`, `langchain-pinecone`, `PyPDF2`
+        4. ✅ Verify the Pinecone index exists or can be created
         """)
 
 def display_chat_message(message: str, is_user: bool = False):
@@ -168,15 +248,84 @@ def process_document_query(query: str, rag_service: RAGService, namespace: str =
     except Exception as e:
         return f"Error processing document query: {str(e)}"
 
+def display_suggested_queries(chat_mode: str, data_agent, rag_service, namespace: str = "", show_header: bool = True):
+    """Display 4 compact suggested queries."""
+    if chat_mode == "📊 Talk to Data":
+        queries = [
+            "What tables and data is available to analyse?",
+            "Which customer segments exist in the data?",
+            "What's the monthly trend of net sales?",
+            "What is the average revenue by males and females?"
+        ]
+    else:
+        queries = [
+            "What is this document about?",
+            "Summarize the key points",
+            "What are the main conclusions?",
+            "Explain the methodology used"
+        ]
+
+    # Show header only initially to save space
+    if show_header:
+        st.markdown('<p style="font-size: 0.8rem; margin-bottom: 0.3rem; color: #666;">💡 <strong>Suggested Queries</strong></p>', unsafe_allow_html=True)
+
+    cols = st.columns(2)
+    for i, query in enumerate(queries):
+        col = cols[i % 2]
+        with col:
+            # Use different keys based on whether it's initial or persistent display
+            key_suffix = "_initial" if show_header else "_persistent"
+            if st.button(query, key=f"suggestion_{i}{key_suffix}", help="Click to ask this question", use_container_width=True):
+                # Add user message to history
+                st.session_state.messages.append({"role": "user", "content": query})
+
+                # Process the query immediately
+                with st.spinner("Thinking..."):
+                    if chat_mode == "📊 Talk to Data" and data_agent:
+                        response = process_data_query(query, data_agent, st.session_state.session_id)
+                    elif chat_mode == "📄 Talk to Documents" and rag_service:
+                        response = process_document_query(query, rag_service, namespace)
+                    else:
+                        response = "Sorry, the selected service is not available."
+
+                # Add assistant response to history
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                st.rerun()
+
 def main():
     """Main Streamlit application."""
 
+    # Add mobile detection and sidebar toggle
+    st.markdown("""
+    <script>
+        // Simple mobile detection and sidebar management
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
+        // Hide sidebar on mobile by default
+        if (isMobile()) {
+            const sidebar = document.querySelector('.css-1d391kg');
+            if (sidebar) {
+                sidebar.style.transform = 'translateX(-100%)';
+            }
+        }
+    </script>
+    """, unsafe_allow_html=True)
+
     # Header
-    st.markdown('<div class="main-header"><h1>🤖 Marketing Insight Chatbot</h1><p>Query your data or ask questions about your documents</p><p style="font-size: 0.9em; margin-top: 0.5rem;">Developed by: Sumit Kamra, FoundryAI</p></div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="main-header">
+        <div class="main-title">🔍 Marketing Insight Explorer</div>
+        <div class="developer-credit">Developed by Sumit Kamra</div>
+    </div>
+    ''', unsafe_allow_html=True)
 
     # Initialize services
     data_agent, data_error = initialize_data_agent()
     rag_service, rag_error = initialize_rag_service()
+
+        # Store service status for later display at bottom
 
     # Check if at least one service is available
     if data_error and rag_error:
@@ -192,8 +341,6 @@ def main():
 
     # Sidebar configuration
     with st.sidebar:
-        st.header("🔧 Configuration")
-
         # Mode selection
         st.markdown('<div class="mode-selector">', unsafe_allow_html=True)
         st.subheader("Chat Mode")
@@ -214,6 +361,9 @@ def main():
             help="Select whether to query your database or ask questions about vectorized documents"
         )
         st.markdown('</div>', unsafe_allow_html=True)
+
+        # Initialize namespace variable
+        namespace = ""
 
         # Mode-specific configuration
         if chat_mode == "📄 Talk to Documents" and rag_service:
@@ -297,12 +447,49 @@ def main():
                 rag_service.clear_conversation_history()
             st.rerun()
 
+        # Service status at bottom with smaller text
+        st.markdown('<div class="service-status">', unsafe_allow_html=True)
+        st.caption("🔧 **Service Status**")
+
+        # Data service status
+        if data_agent:
+            st.caption("📊 Data Querying: ✅")
+        else:
+            st.caption("📊 Data Querying: ❌")
+            if data_error:
+                st.caption(f"Error: {data_error[:50]}...")
+
+        # RAG service status
+        if rag_service:
+            st.caption("📄 Document Processing: ✅")
+            # Add test button for RAG service
+            if st.button("🧪 Test", help="Test Pinecone and OpenAI connectivity", key="test_rag"):
+                try:
+                    # Test basic functionality
+                    stats = rag_service.get_index_stats()
+                    st.caption(f"✅ Test passed! {stats.get('total_vectors', 0)} vectors")
+                except Exception as e:
+                    st.caption(f"❌ Test failed: {str(e)[:30]}...")
+        else:
+            st.caption("📄 Document Processing: ❌")
+            if rag_error:
+                st.caption(f"Error: {rag_error[:50]}...")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Show suggested queries initially with header
+    display_suggested_queries(chat_mode, data_agent, rag_service, namespace, show_header=True)
+
     # Main chat interface
-    st.header("💬 Chat")
+    st.markdown('<div class="explore-header"><h2>💬 Explore</h2></div>', unsafe_allow_html=True)
 
     # Display chat history
     for message in st.session_state.messages:
         display_chat_message(message["content"], message["role"] == "user")
+
+    # Show suggested queries again after interactions (without header to save space)
+    if len(st.session_state.messages) > 0:
+        display_suggested_queries(chat_mode, data_agent, rag_service, namespace, show_header=False)
 
     # Chat input
     if prompt := st.chat_input("Ask me anything..."):
@@ -322,33 +509,6 @@ def main():
         # Add assistant response to history
         st.session_state.messages.append({"role": "assistant", "content": response})
         display_chat_message(response)
-
-    # Show example queries based on mode
-    if len(st.session_state.messages) == 0:
-        st.subheader("💡 Example Queries")
-
-        if chat_mode == "📊 Talk to Data":
-            examples = [
-                "What are the total sales for this year?",
-                "Show me customer segments and their characteristics",
-                "What's the average order value by customer type?",
-                "How has Bitcoin price changed today?"
-            ]
-        else:
-            examples = [
-                "What is this document about?",
-                "Summarize the key points",
-                "What are the main conclusions?",
-                "Explain the methodology used"
-            ]
-
-        cols = st.columns(2)
-        for i, example in enumerate(examples):
-            col = cols[i % 2]
-            if col.button(f"💡 {example}", key=f"example_{i}"):
-                # Simulate user input
-                st.session_state.messages.append({"role": "user", "content": example})
-                st.rerun()
 
 if __name__ == "__main__":
     main()

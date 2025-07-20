@@ -12,6 +12,7 @@ from langgraph.graph.message import add_messages
 import logging
 import uuid
 from pathlib import Path
+from datetime import datetime
 
 from ..tools.query_tool import (
     run_sales_query,
@@ -96,30 +97,48 @@ Remember the user's name and preferences throughout the conversation."""
         )
         workflow.add_edge("tools", "agent")
 
-        # Setup SQLite checkpointer if memory is enabled
+        # Setup checkpointer (SQLite or Cloud) if memory is enabled
         checkpointer = None
         if self.enable_memory:
+            # Try cloud memory first (for GCP deployment)
             try:
-                from langgraph.checkpoint.sqlite import SqliteSaver
+                from ..utils.cloud_memory import get_cloud_memory
+                cloud_memory = get_cloud_memory()
 
-                # Create data directory if it doesn't exist
-                data_dir = Path(__file__).parent.parent.parent / "data"
-                data_dir.mkdir(parents=True, exist_ok=True)
+                if cloud_memory and cloud_memory.is_available():
+                    # Use a simple in-memory checkpointer for cloud deployment
+                    # since Firestore will handle persistence through our custom logic
+                    from langgraph.checkpoint.memory import MemorySaver
+                    checkpointer = MemorySaver()
+                    logger.info("Cloud memory available - using MemorySaver with Firestore persistence")
+                else:
+                    raise Exception("Cloud memory not available, falling back to SQLite")
 
-                # Simple SQLite checkpointer setup with absolute path
-                db_file = data_dir / "agent_memory.db"
-
-                # Create checkpointer using direct constructor
-                import sqlite3
-                conn = sqlite3.connect(str(db_file), check_same_thread=False)
-                checkpointer = SqliteSaver(conn)
-                checkpointer.setup()  # Initialize database tables
-                logger.info(f"SQLite checkpointer enabled: {db_file}")
-
-            except ImportError:
-                logger.warning("langgraph.checkpoint.sqlite not available, memory disabled")
             except Exception as e:
-                logger.warning(f"Failed to setup SQLite checkpointer: {e}")
+                logger.info(f"Cloud memory not available ({e}), trying SQLite...")
+
+                # Fallback to SQLite for local development
+                try:
+                    from langgraph.checkpoint.sqlite import SqliteSaver
+
+                    # Create data directory if it doesn't exist
+                    data_dir = Path(__file__).parent.parent.parent / "data"
+                    data_dir.mkdir(parents=True, exist_ok=True)
+
+                    # Simple SQLite checkpointer setup with absolute path
+                    db_file = data_dir / "agent_memory.db"
+
+                    # Create checkpointer using direct constructor
+                    import sqlite3
+                    conn = sqlite3.connect(str(db_file), check_same_thread=False)
+                    checkpointer = SqliteSaver(conn)
+                    checkpointer.setup()  # Initialize database tables
+                    logger.info(f"SQLite checkpointer enabled: {db_file}")
+
+                except ImportError:
+                    logger.warning("langgraph.checkpoint.sqlite not available, memory disabled")
+                except Exception as e:
+                    logger.warning(f"Failed to setup SQLite checkpointer: {e}")
 
         return workflow.compile(checkpointer=checkpointer)
 
@@ -179,6 +198,16 @@ Remember the user's name and preferences throughout the conversation."""
                 self.clear_session_memory(session_id)
                 logger.info(f"Cleared memory for session: {session_id[:8]}...")
 
+            # Load previous session if using cloud memory
+            if self.enable_memory:
+                from ..utils.cloud_memory import get_cloud_memory
+                cloud_memory = get_cloud_memory()
+                if cloud_memory and cloud_memory.is_available():
+                    # Load previous session from Firestore
+                    previous_session = cloud_memory.load_session(session_id)
+                    if previous_session:
+                        logger.info(f"Loaded previous session from cloud: {session_id[:8]}...")
+
             # Initialize state
             initial_state = {
                 "messages": [HumanMessage(content=user_query)],
@@ -194,6 +223,29 @@ Remember the user's name and preferences throughout the conversation."""
 
             # Run the workflow
             result = self.workflow.invoke(initial_state, config=config)
+
+            # Save session to cloud memory if available
+            if self.enable_memory:
+                from ..utils.cloud_memory import get_cloud_memory
+                cloud_memory = get_cloud_memory()
+                if cloud_memory and cloud_memory.is_available():
+                    # Extract messages for cloud storage
+                    messages = result.get("messages", [])
+                    message_data = []
+                    for msg in messages:
+                        if hasattr(msg, 'content'):
+                            message_data.append({
+                                "type": type(msg).__name__,
+                                "content": str(msg.content),
+                                "timestamp": datetime.now().isoformat()
+                            })
+
+                    # Save to Firestore
+                    cloud_memory.save_session(
+                        session_id=session_id,
+                        messages=message_data,
+                        metadata={"query": user_query, "mode": "data_extraction"}
+                    )
 
             # Extract the final response
             final_messages = result["messages"]

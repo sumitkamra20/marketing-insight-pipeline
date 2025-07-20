@@ -54,6 +54,15 @@ python run_chatbot.py
 streamlit run integrated_chatbot.py
 ```
 
+**Option C: Deploy to GCP Cloud Run**
+```bash
+# Quick deployment
+./deploy.sh
+
+# See QUICK_DEPLOY.md for 5-minute setup guide
+# See DEPLOYMENT.md for comprehensive deployment documentation
+```
+
 ## 🎯 Usage
 
 ### Data Querying Mode 📊
@@ -131,6 +140,20 @@ The chatbot is designed to work even if only one service is configured:
 - **Data Only**: If only Snowflake is configured, only data querying will be available
 - **Documents Only**: If only Pinecone is configured, only document processing will be available
 - **Both**: If both are configured, you can switch between modes seamlessly
+
+### Cloud Deployment
+
+The chatbot includes full GCP Cloud Run deployment support with:
+
+- **Persistent Memory**: Uses Google Firestore for conversation history
+- **Auto-scaling**: Scales from 0 to 100 instances based on demand
+- **Secure**: Environment variables for API keys, HTTPS by default
+- **Cost-effective**: Pay only for actual usage
+
+**Memory Persistence:**
+- **Local**: SQLite database (`ai_agent/data/agent_memory.db`)
+- **Cloud**: Google Firestore for cross-container persistence
+- **Automatic Fallback**: Graceful degradation if cloud services unavailable
 
 ## 🛠️ Development
 
