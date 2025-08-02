@@ -14,54 +14,31 @@ A **dimensional modeling approach** that organizes data into **facts** (business
 ## **📈 Star Schema Structure**
 
 ```mermaid
-erDiagram
-    dim_customer {
-        customer_id "Customer ID"
-        gender "Gender"
-        location "Location"
-        customer_tenure_months "Tenure"
-        customer_segment "Segment"
-    }
+graph LR
+    subgraph "Dimension Tables"
+        DIM_CUST[dim_customer<br/>Customer Profiles<br/>• customer_id<br/>• gender<br/>• location<br/>• tenure<br/>• segment]
 
-    dim_products {
-        product_sku "Product SKU"
-        category "Category"
-        gst_rate "GST Rate"
-        product_group "Product Group"
-    }
+        DIM_PROD[dim_products<br/>Product Catalog<br/>• product_sku<br/>• category<br/>• gst_rate<br/>• product_group]
 
-    dim_datetime {
-        date_day "Date"
-        year "Year"
-        month "Month"
-        month_name "Month Name"
-        is_weekend "Weekend"
-    }
+        DIM_DATE[dim_datetime<br/>Time Intelligence<br/>• date_day<br/>• year<br/>• month<br/>• month_name<br/>• is_weekend]
+    end
 
-    fct_sales {
-        transaction_id "Transaction ID"
-        customer_id "Customer ID"
-        product_sku "Product SKU"
-        transaction_date "Date"
-        quantity "Quantity"
-        total_amount "Total Amount"
-        discount_amount "Discount"
-        sale_size_category "Size Category"
-    }
+    subgraph "Fact Tables"
+        FCT_SALES[fct_sales<br/>Sales Transactions<br/>• transaction_id<br/>• customer_id<br/>• product_sku<br/>• transaction_date<br/>• quantity<br/>• total_amount<br/>• discount_amount<br/>• sale_size_category]
 
-    fct_customer_segments {
-        customer_id "Customer ID"
-        segment_id "Segment ID"
-        segment_name "Segment Name"
-        total_orders "Total Orders"
-        total_revenue "Total Revenue"
-        activity_status "Activity Status"
-    }
+        FCT_SEGMENTS[fct_customer_segments<br/>Customer Segments<br/>• customer_id<br/>• segment_id<br/>• segment_name<br/>• total_orders<br/>• total_revenue<br/>• activity_status]
+    end
 
-    dim_customer ||--o{ fct_sales : "One customer to many sales"
-    dim_products ||--o{ fct_sales : "One product to many sales"
-    dim_datetime ||--o{ fct_sales : "One date to many sales"
-    fct_customer_segments ||--|| dim_customer : "ML segments to customers"
+    DIM_CUST --> FCT_SALES
+    DIM_PROD --> FCT_SALES
+    DIM_DATE --> FCT_SALES
+    FCT_SEGMENTS --> DIM_CUST
+
+    style DIM_CUST fill:#e1f5fe
+    style DIM_PROD fill:#e1f5fe
+    style DIM_DATE fill:#e1f5fe
+    style FCT_SALES fill:#f3e5f5
+    style FCT_SEGMENTS fill:#f3e5f5
 ```
 
 ---
