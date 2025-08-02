@@ -14,54 +14,28 @@ A **dimensional modeling approach** that organizes data into **facts** (business
 ## **📈 Star Schema Structure**
 
 ```mermaid
-erDiagram
-    dim_customer {
-        customer_id
-        gender
-        location
-        customer_tenure_months
-        customer_segment
-    }
+graph TB
+    subgraph "Dimension Tables"
+        DIM_CUST[dim_customer<br/>Customer Profiles]
+        DIM_PROD[dim_products<br/>Product Catalog]
+        DIM_DATE[dim_datetime<br/>Time Intelligence]
+    end
 
-    dim_products {
-        product_sku
-        category
-        gst_rate
-        product_group
-    }
+    subgraph "Fact Tables"
+        FCT_SALES[fct_sales<br/>Sales Transactions]
+        FCT_SEGMENTS[fct_customer_segments<br/>Customer Segments]
+    end
 
-    dim_datetime {
-        date_day
-        year
-        month
-        month_name
-        is_weekend
-    }
+    DIM_CUST --> FCT_SALES
+    DIM_PROD --> FCT_SALES
+    DIM_DATE --> FCT_SALES
+    FCT_SEGMENTS --> DIM_CUST
 
-    fct_sales {
-        transaction_id
-        customer_id
-        product_sku
-        transaction_date
-        quantity
-        total_amount
-        discount_amount
-        sale_size_category
-    }
-
-    fct_customer_segments {
-        customer_id
-        segment_id
-        segment_name
-        total_orders
-        total_revenue
-        activity_status
-    }
-
-    dim_customer ||--o{ fct_sales : "One customer to many sales"
-    dim_products ||--o{ fct_sales : "One product to many sales"
-    dim_datetime ||--o{ fct_sales : "One date to many sales"
-    fct_customer_segments ||--|| dim_customer : "ML segments to customers"
+    style DIM_CUST fill:#e1f5fe
+    style DIM_PROD fill:#e1f5fe
+    style DIM_DATE fill:#e1f5fe
+    style FCT_SALES fill:#f3e5f5
+    style FCT_SEGMENTS fill:#f3e5f5
 ```
 
 ---
