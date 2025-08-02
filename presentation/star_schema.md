@@ -16,46 +16,46 @@ A **dimensional modeling approach** that organizes data into **facts** (business
 ```mermaid
 erDiagram
     dim_customer {
-        customer_id
-        gender
-        location
-        customer_tenure_months
-        customer_segment
+        customer_id "Customer ID"
+        gender "Gender"
+        location "Location"
+        customer_tenure_months "Tenure"
+        customer_segment "Segment"
     }
 
     dim_products {
-        product_sku
-        category
-        gst_rate
-        product_group
+        product_sku "Product SKU"
+        category "Category"
+        gst_rate "GST Rate"
+        product_group "Product Group"
     }
 
     dim_datetime {
-        date_day
-        year
-        month
-        month_name
-        is_weekend
+        date_day "Date"
+        year "Year"
+        month "Month"
+        month_name "Month Name"
+        is_weekend "Weekend"
     }
 
     fct_sales {
-        transaction_id
-        customer_id
-        product_sku
-        transaction_date
-        quantity
-        total_amount
-        discount_amount
-        sale_size_category
+        transaction_id "Transaction ID"
+        customer_id "Customer ID"
+        product_sku "Product SKU"
+        transaction_date "Date"
+        quantity "Quantity"
+        total_amount "Total Amount"
+        discount_amount "Discount"
+        sale_size_category "Size Category"
     }
 
     fct_customer_segments {
-        customer_id
-        segment_id
-        segment_name
-        total_orders
-        total_revenue
-        activity_status
+        customer_id "Customer ID"
+        segment_id "Segment ID"
+        segment_name "Segment Name"
+        total_orders "Total Orders"
+        total_revenue "Total Revenue"
+        activity_status "Activity Status"
     }
 
     dim_customer ||--o{ fct_sales : "One customer to many sales"
