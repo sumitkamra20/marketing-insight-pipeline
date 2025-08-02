@@ -15,7 +15,7 @@ Your Marketing Insight Pipeline uses an **intelligent AI agent** that understand
 ```mermaid
 graph LR
     subgraph "Step 1: Understand"
-        USER[Business User<br/>"What were total sales<br/>last month?"]
+        USER[Business User<br/>Natural Language Query]
         AI[AI Agent<br/>Understands Intent]
     end
 
