@@ -223,4 +223,110 @@ are working well!"
 
 ---
 
-**This AI agent transforms how you interact with your data - from complex technical queries to simple, natural conversations that deliver immediate business value.**
+## **🏗️ LangGraph Nodes Architecture**
+
+### **Technical Foundation Behind the Simple Flow**
+
+While the user experience is simple, the technical architecture uses **LangGraph** to orchestrate multiple intelligent nodes:
+
+```mermaid
+graph TB
+    subgraph "LangGraph Workflow"
+        subgraph "Entry Point"
+            START[User Query]
+        end
+
+        subgraph "Agent Node"
+            AGENT[Agent Node<br/>LLM with Tools]
+            SYSTEM_PROMPT[System Prompt<br/>Business Context]
+        end
+
+        subgraph "Decision Logic"
+            CONDITION[Should Continue?<br/>Tool Calls Present?]
+        end
+
+        subgraph "Tool Node"
+            TOOL_EXEC[Tool Execution<br/>Data Query Tools]
+            TOOL_RESULT[Tool Results<br/>Formatted Response]
+        end
+
+        subgraph "Memory Management"
+            MEMORY[Session Memory<br/>SQLite/Firestore]
+            CONTEXT[Conversation Context<br/>User Preferences]
+        end
+
+        subgraph "Exit Point"
+            END[Final Response]
+        end
+    end
+
+    START --> AGENT
+    AGENT --> SYSTEM_PROMPT
+    AGENT --> CONDITION
+    CONDITION --> TOOL_EXEC
+    CONDITION --> END
+    TOOL_EXEC --> TOOL_RESULT
+    TOOL_RESULT --> AGENT
+    AGENT --> MEMORY
+    MEMORY --> CONTEXT
+    CONTEXT --> AGENT
+    AGENT --> END
+
+    style AGENT fill:#e8f5e8
+    style TOOL_EXEC fill:#fff3e0
+    style MEMORY fill:#f3e5f5
+    style CONDITION fill:#e1f5fe
+```
+
+### **Node Functions**
+
+#### **🔧 Agent Node**
+- **Purpose**: Processes user queries and decides on tool usage
+- **Function**: LLM with bound tools for intelligent decision making
+- **Output**: Tool calls or final response
+
+#### **🛠️ Tool Node**
+- **Purpose**: Executes selected tools (data queries, RAG, etc.)
+- **Function**: Runs tools and formats results
+- **Tools Available**: Sales queries, generic queries, schema info, connection tests
+
+#### **🧠 Memory Node**
+- **Purpose**: Maintains conversation context and user preferences
+- **Function**: Session-based memory with SQLite/Firestore
+- **Features**: Context persistence, session isolation, user preferences
+
+#### **🎯 Decision Logic**
+- **Purpose**: Determines workflow continuation
+- **Logic**: If tool calls exist → continue to tools, else → end
+- **Result**: Conditional routing through the workflow
+
+### **State Management**
+
+```python
+class AgentState(TypedDict):
+    messages: list[BaseMessage]      # Conversation history
+    user_query: str                 # Current user question
+    extracted_data: str             # Data from tools
+    analysis_complete: bool         # Workflow status
+```
+
+### **Workflow Benefits**
+
+#### **🔄 Scalable Architecture**
+- **Modular Design**: Easy to add new tools and capabilities
+- **State Management**: Robust conversation state handling
+- **Error Recovery**: Graceful handling of failures
+
+#### **🧠 Intelligent Routing**
+- **Automatic Tool Selection**: AI chooses appropriate tools
+- **Context Awareness**: Maintains conversation flow
+- **Optimized Execution**: Efficient data retrieval and processing
+
+#### **📊 Business Intelligence**
+- **Semantic Understanding**: Maps business language to technical queries
+- **Real-time Processing**: Live data access and analysis
+- **Insight Generation**: AI-powered business recommendations
+
+---
+
+**This LangGraph nodes architecture provides the sophisticated technical foundation that enables the simple, intuitive user experience - transforming complex data operations into natural conversations.**
