@@ -116,7 +116,7 @@ erDiagram
         gender
         location
         customer_tenure_months
-        string customer_segment
+        customer_segment
     }
 
     dim_products {
@@ -136,8 +136,8 @@ erDiagram
 
     fct_sales {
         transaction_id
-        customer_id FK
-        product_sku FK
+        customer_id
+        product_sku
         transaction_date
         quantity
         total_amount
