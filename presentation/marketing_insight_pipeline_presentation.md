@@ -112,46 +112,46 @@ graph TB
 ```mermaid
 erDiagram
     dim_customer {
-        string customer_id PK
-        string gender
-        string location
-        int customer_tenure_months
+        customer_id
+        gender
+        location
+        customer_tenure_months
         string customer_segment
     }
 
     dim_products {
-        string product_sku PK
-        string category
-        decimal gst_rate
-        string product_group
+        product_sku
+        category
+        gst_rate
+        product_group
     }
 
     dim_datetime {
-        date date_day PK
-        int year
-        int month
-        string month_name
-        boolean is_weekend
+        date_day
+        year
+        month
+        month_name
+        is_weekend
     }
 
     fct_sales {
-        string transaction_id PK
-        string customer_id FK
-        string product_sku FK
-        date transaction_date FK
-        int quantity
-        decimal total_amount
-        decimal discount_amount
-        string sale_size_category
+        transaction_id
+        customer_id FK
+        product_sku FK
+        transaction_date
+        quantity
+        total_amount
+        discount_amount
+        sale_size_category
     }
 
     fct_customer_segments {
-        string customer_id PK
-        int segment_id
-        string segment_name
-        int total_orders
-        decimal total_revenue
-        string activity_status
+        customer_id
+        segment_id
+        segment_name
+        total_orders
+        total_revenue
+        activity_status
     }
 
     dim_customer ||--o{ fct_sales : "One customer to many sales"
